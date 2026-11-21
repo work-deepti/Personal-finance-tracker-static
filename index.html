@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Investments</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#14181f;--mute:#6b7280;--line:#e4e7ec;--ac:#0f766e;--onac:#fff;--up:#15803d;--down:#c2410c;--inv:#8a94a6}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#171d26;--ink:#e9edf3;--mute:#98a2b3;--line:#283140;--ac:#2dd4bf;--onac:#04201d;--up:#4ade80;--down:#fb923c;--inv:#7d889b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+body{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100dvh;align-content:start}
+header{background:var(--card);border-inline-end:1px solid var(--line);position:sticky;top:0;align-self:start;height:100dvh;overflow-y:auto;z-index:10}
+.bar{min-height:100%;padding:20px 14px;display:flex;flex-direction:column;gap:20px}
+.brand{font-weight:700;font-size:17px;padding:0 10px}
+.bar nav{display:grid;gap:5px}
+.bar nav a{display:block;padding:9px 10px;border-radius:8px;color:var(--mute);text-decoration:none;font-weight:500}
+.bar nav a.on{color:var(--ink);background:var(--bg);font-weight:650}
+.bar nav a.cta{background:var(--ac);color:var(--onac);margin-top:10px}
+#settingsBtn{margin-top:auto;align-self:stretch;text-align:left}
+main{min-width:0;width:100%;padding:22px clamp(16px,2.5vw,36px) 48px}
+.demo-banner{grid-column:1/-1;padding:10px 16px;background:#164e63;color:white;text-align:center;font:14px system-ui}
+@media(max-width:650px){
+ body{grid-template-columns:minmax(0,1fr)}
+ header{height:auto;border-inline-end:0;border-bottom:1px solid var(--line)}
+ .bar{padding:10px 12px;gap:8px}
+ .bar nav{display:flex;flex-wrap:wrap;gap:4px}
+ .bar nav a{padding:6px 8px}
+ .bar nav a.cta{margin-top:0}
+ #settingsBtn{align-self:start;padding:5px 8px;margin:0}
+}
+h1{font-size:22px;margin:0 0 16px}h2{font-size:17px;margin:30px 0 10px}
+.dashboard-title{font-size:clamp(24px,3vw,36px);letter-spacing:-.035em;line-height:1.2;margin-bottom:20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line)}
+.stat{background:var(--card);padding:16px 20px}.stat b{display:block;font-size:26px;font-weight:650;letter-spacing:-.01em}
+.stat.main b{font-size:30px}.stat span,.sub{color:var(--mute);font-size:13px}
+.up{color:var(--up)}.down{color:var(--down)}
+.chead{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:16px 20px 0}
+.chead h2{margin:0}#readout{margin-left:auto;font-size:13px;color:var(--mute)}
+.key{font-size:13px;color:var(--mute)}.key i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--ac);vertical-align:middle;margin-right:6px}
+.key.d i{border-top:2px dashed var(--inv)}
+#chart{padding:20px;display:grid;grid-template-columns:minmax(0,390px) minmax(0,350px);justify-content:center;gap:22px;align-items:center}
+.pie-wrap{position:relative;display:grid;place-items:center;width:min(100%,390px);aspect-ratio:320/260;margin:auto}
+.pie-art{display:block;width:100%;height:100%;pointer-events:none}
+.pie-art text{font:700 12px system-ui;fill:var(--ink)}
+.pie-art .slice-label{fill:white;paint-order:stroke;stroke:#0003;stroke-width:1.5px}
+.pie-art .pie-caption{font-weight:400;fill:var(--mute)}
+.pie-art .pie-total{font-size:16px}
+#hchart svg{display:block;width:100%;height:auto}#hchart text{font:13px system-ui,-apple-system,"Segoe UI",sans-serif;fill:var(--mute);font-variant-numeric:tabular-nums}
+.history-plot{padding:12px 14px 0}.history-plot svg{display:block;width:100%;height:auto}.history-plot text{fill:var(--mute);font:15px system-ui}
+.history-explain{margin:0 20px 12px;padding:12px 14px;background:var(--bg);border-radius:8px}
+.history-explain[hidden]{display:none}.history-explain dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+.history-explain dt{font-size:12px;color:var(--mute)}.history-explain dd{margin:0;font-weight:650}
+.history-explain label{display:inline-flex;flex-direction:row;align-items:center;margin-left:12px}
+.history-explain select{height:auto;padding:4px 8px}
+.history-events{margin:0;padding:0 20px 12px 40px}.history-events:empty{display:none}
+.history-note{margin:0;padding:6px 20px 16px}.zen #history{filter:blur(8px)}
+@media(max-width:600px){.history-plot text{font-size:23px}}
+.type-breakdown{width:100%;border-collapse:collapse;min-width:0}.type-breakdown th,.type-breakdown td{padding:10px 8px}.type-breakdown th:first-child,.type-breakdown td:first-child{padding-left:8px}.type-breakdown th:last-child,.type-breakdown td:last-child{padding-right:8px}
+#chart .type-breakdown th,#chart .type-breakdown td{padding:6px;font-size:13px}
+.type-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px} .type-total{font-weight:700;border-top:1px solid var(--line)}
+@media(max-width:820px){#chart{grid-template-columns:1fr;gap:12px}}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:12px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;padding-left:20px}th:last-child,td:last-child{padding-right:20px}
+th{font-size:12px;font-weight:600;color:var(--mute)}tr:last-child td{border:0}
+td small{display:block;color:var(--mute);font-size:12px}
+.acts{display:flex;gap:4px;justify-content:flex-end}.num{text-align:right;font-variant-numeric:tabular-nums}.menu{position:relative;display:inline-block}.menu summary{list-style:none;cursor:pointer;border-radius:7px;padding:3px 9px;font-size:20px;line-height:1.2}.menu summary::-webkit-details-marker{display:none}.menu[open] summary{background:var(--bg)}.menu-items{position:absolute;right:0;top:28px;z-index:8;min-width:116px;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px #0002;display:grid}.menu-items button{text-align:left;border:0;background:none;padding:8px;border-radius:6px;cursor:pointer}.menu-items button:hover{background:var(--bg)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.pill{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--mute);font-size:13px}.pill[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:var(--onac)}.toolbar select{height:36px;padding:5px 9px}.status{font-size:12px;color:var(--mute);margin-left:auto}.settings{width:min(420px,92vw)}.settings .fa{flex-wrap:wrap}
+button,input,select{font:inherit;color:var(--ink)}
+.lnk{background:none;border:0;color:var(--ac);cursor:pointer;padding:4px 6px;border-radius:6px}.lnk:hover{background:var(--bg)}.lnk.del{color:var(--down)}
+.btn{background:var(--ac);color:var(--onac);border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}.foot .btn{padding:8px 14px;font-weight:500}
+.empty{padding:34px 20px;text-align:center;color:var(--mute)}.empty a{color:var(--ac)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.ledger-search{max-width:460px;margin:0 0 14px}.ledger-search input{width:100%}
+.zen #ledger-all,.zen #summary,.zen #open,.zen #closed,.zen #chart,.zen #fdcalbody{filter:blur(8px)}
+.form{max-width:680px;padding:22px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.seg button{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+.seg button:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);position:relative}
+label.h,#closedBox[hidden]{display:none}
+input,select{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);height:42px}
+#sug{position:absolute;top:100%;left:0;right:0;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto;margin-top:2px}
+#sug:empty{display:none}#sug div{padding:9px 12px;cursor:pointer;color:var(--ink);font-size:14px}#sug div:hover{background:var(--bg)}#sug small{color:var(--mute)}
+.fa{display:flex;gap:10px;margin-top:22px}
+#closedBox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}#closedBox h2{margin:0 0 10px;font-size:15px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);padding:22px;width:min(380px,92vw)}
+dialog::backdrop{background:#0008}dialog h2{margin:0 0 4px}
+</style></head><body>
+<header><div class="bar"><span class="brand">My Investments</span>
+<nav aria-label="Main navigation"><a href="#/" id="nav-dash">Dashboard</a><a href="#/investments" id="nav-investments">Investments</a><a href="#/ledger" id="nav-ledger">Ledger</a><a href="#/add" id="nav-add" class="cta">+ New investment</a></nav><button class="btn ghost" id="settingsBtn" type="button">Settings</button></div></header>
+<main>
+<div id="dash">
+ <h1 class="dashboard-title">Your Portfolio at a Glance</h1>
+ <div class="panel" id="summary"><div class="stats" id="stats"></div></div>
+ <h2>Invested amount by type</h2>
+ <div class="panel"><div id="chart" aria-live="polite"></div><div id="updated" class="status" style="padding:0 20px 14px"></div></div>
+ <h2>Portfolio value vs invested amount</h2>
+ <div id="history" class="panel">
+  <div class="chead"><span class="key"><i></i>Portfolio value</span><span class="key d"><i></i>Invested amount</span><span class="sub">Past 2 years</span></div>
+  <div id="history-plot" class="history-plot" aria-live="polite"><p class="empty">Loading portfolio history…</p></div>
+  <p id="history-readout" class="history-note">Hover over the graph to see values.</p>
+  <section id="history-explain" class="history-explain" aria-label="Portfolio change breakdown" hidden>
+   <strong>What changed</strong><label>Compare with <select id="history-window">
+    <option value="30">30 days earlier</option><option value="90">90 days earlier</option>
+    <option value="365">1 year earlier</option><option value="730">Start of chart</option>
+   </select></label>
+   <div id="history-breakdown"></div>
+  </section>
+  <ul id="history-events" class="history-events"></ul>
+  <p id="history-note" class="sub history-note"></p>
+ </div>
+ <div id="fdwrap" hidden><h2>FD maturities — next 12 months</h2>
+ <div class="panel"><div class="scroll" id="fdcalbody"></div></div></div>
+</div>
+<div id="investments" hidden>
+ <h1>Investments</h1><h2>Open holdings</h2><div class="toolbar" id="filters"><button class="pill" data-filter="all" aria-pressed="true">All</button><button class="pill" data-filter="stock">Stocks / ETFs</button><button class="pill" data-filter="mf">Mutual Funds</button><button class="pill" data-filter="crypto">Crypto</button><button class="pill" data-filter="metals">Gold / Silver</button><button class="pill" data-filter="fd">FDs &amp; Other</button><select id="sort" aria-label="Sort holdings"><option value="name">Sort: Name</option><option value="value">Largest position</option><option value="gain">Highest gain</option><option value="loss">Largest loss</option></select></div><div class="panel"><div class="scroll" id="open"></div></div>
+ <div id="closedWrap" hidden><h2>Closed investments</h2><div class="panel"><div class="scroll" id="closed"></div></div></div>
+
+</div>
+
+<div id="ledger-page" hidden>
+ <h1>Transaction ledger</h1>
+ <label class="ledger-search">Search transactions
+  <input id="ledger-search" type="search" placeholder="Name, ticker, action, or date" aria-controls="ledger-all">
+ </label>
+ <div class="panel"><div class="scroll" id="ledger-all"></div></div>
+</div>
+
+<div id="add" hidden>
+ <h1 id="ftitle">New investment</h1>
+ <form id="f" class="panel form" autocomplete="off">
+  <div class="seg" id="seg"></div>
+  <div class="grid">
+   <label id="nameL"><span>Name</span><input name="name" id="nm" required><div id="sug"></div></label>
+   <label data-t="stock mf crypto" id="symL"><span>Symbol / code</span><input name="symbol"></label>
+   <label data-t="stock mf crypto gold silver"><span>Number of units / shares</span><input name="units" type="number" step="any" min="0" required></label>
+   <label data-t="stock mf crypto gold silver"><span>Buy price per unit</span><input name="buy" type="number" step="any" min="0" required></label><label data-t="stock"><span>Buy currency</span><select name="currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option></select></label><label data-t="mf"><span>Fund tax category (optional)</span><select name="tax_class"><option value="">Not specified</option><option value="equity">Equity-oriented</option><option value="debt">Debt-oriented</option></select></label>
+   <label data-t="gold"><span>Kitco gold bid (USD / troy oz, optional)</span><input name="kitco_bid" type="number" step="any" min="0" placeholder="Leave blank for automatic pricing"></label>
+   <label data-t="stock mf crypto gold silver manual"><span>Buy date</span><input name="date" type="date" required></label>
+   <label data-t="fd manual"><span>Amount invested (₹)</span><input name="principal" type="number" step="any" min="0" required></label>
+   <label data-t="fd"><span>Interest rate (% a year)</span><input name="rate" type="number" step="any" required></label>
+   <label data-t="fd"><span>Start date</span><input name="start" type="date" required></label>
+   <label data-t="fd"><span>Maturity date</span><input name="maturity" type="date" required></label>
+   <label data-t="fd"><span>Interest compounded</span><select name="freq"><option value="4">Quarterly</option><option value="12">Monthly</option><option value="2">Half-yearly</option><option value="1">Yearly</option></select></label>
+   <label data-t="manual"><span>Current value (₹)</span><input name="value" type="number" step="any" min="0" required></label>
+  </div>
+  <p id="metal-hint" class="sub" hidden>Enter grams of pure metal and your INR cost per gram. For jewellery, multiply its metal weight by its purity to get pure-metal grams. For a manual gold quote, copy the USD bid from <a href="https://www.kitco.com/price" target="_blank" rel="noopener noreferrer">Kitco</a> and update it when the price changes.</p>
+  <div id="closedBox" hidden><h2>Closed investment</h2><div class="grid">
+   <label><span>Closed on</span><input name="closed_date" type="date" required></label>
+   <label><span>Total amount received (₹)</span><input name="closed_value" type="number" step="any" min="0" required></label></div></div>
+  <div class="fa"><button class="btn" type="submit">Save</button><a class="btn ghost" href="#/investments" style="text-decoration:none">Cancel</a></div>
+ </form>
+</div>
+ <div class="foot"><button class="btn ghost" id="zen">Hide amounts</button><button class="btn ghost" id="csv">Export CSV</button><button class="btn ghost" id="imp">Import from file</button><button class="btn ghost" id="tpl">Download template</button><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></div>
+</main>
+
+<dialog id="dlg"><form id="clf" method="dialog"><h2>Close investment</h2><p class="sub" id="cl-name"></p>
+ <div class="grid"><label><span>Closed on</span><input id="cl-date" type="date" required></label>
+ <label><span id="cl-lab">Amount received (₹)</span><input id="cl-amt" type="number" step="any" min="0" required></label></div>
+ <div class="fa"><button class="btn" type="submit">Close investment</button><button class="btn ghost" type="button" id="cl-no">Cancel</button></div></form></dialog>
+<dialog id="ledger" style="width:min(720px,94vw)"><h2 id="ledger-title"></h2>
+ <p class="sub" id="ledger-summary"></p>
+ <div id="ledger-rows" class="scroll"></div>
+ <form id="ledger-form">
+  <h2 id="ledger-form-title">Add transaction</h2>
+  <div class="grid">
+   <label>Action<select name="side"><option value="buy">Buy</option><option value="sell">Sell</option></select></label>
+   <label>Trade date<input name="date" type="date" required></label>
+   <label>Shares<input name="units" type="number" min="0" step="any" required></label>
+   <label>Price per share (₹)<input name="price" type="number" min="0" step="any" required></label>
+   <label>Fees (₹)<input name="fee" type="number" min="0" step="any" value="0" required></label>
+  </div>
+  <div class="fa"><button class="btn" type="submit">Save transaction</button>
+   <button class="btn ghost" type="button" id="ledger-done">Done</button></div>
+ </form>
+</dialog>
+<dialog id="settings" class="settings"><h2>Settings</h2><p class="sub">Setup and development actions</p><div class="fa"><button class="btn ghost" id="smp" type="button">Load sample data</button><button class="btn ghost" id="clr" type="button" hidden>Clear sample data</button><button class="btn ghost" id="quit" type="button">Sign out</button><button class="btn" id="settingsClose" type="button">Done</button></div></dialog>
+
+<dialog id="hd" style="width:min(680px,94vw)"><h2 id="hd-name"></h2><p class="sub" id="hd-sub"></p>
+<div class="seg" id="hd-seg"></div>
+<div id="hchart"></div>
+<div class="fa"><button class="btn ghost" type="button" onclick="$('#hd').close()">Close</button></div></dialog>
+
+<script src="/portfolio.js"></script>
+<script>
+const $=s=>document.querySelector(s),J={'Content-Type':'application/json'};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN'),
+ inr2=n=>'₹'+(+n).toLocaleString('en-IN',{maximumFractionDigits:2}),
+ num=n=>(+(+n).toFixed(4)).toLocaleString('en-IN'),
+ sgn=n=>(n>=0?'+':'-')+inr(Math.abs(n)),
+ fdate=s=>new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+ short=n=>{const a=Math.abs(n);return '₹'+(a>=1e7?+(n/1e7).toFixed(2)+' Cr':a>=1e5?+(n/1e5).toFixed(2)+' L':a>=1e3?+(n/1e3).toFixed(1)+'K':Math.round(n))};
+const NAME={stock:'Stock / ETF',mf:'Mutual fund',crypto:'Crypto',gold:'Gold',silver:'Silver',fd:'Fixed deposit',manual:'Other'},
+ COL={stock:'#1d4ed8',mf:'#0f766e',crypto:'#b45309',gold:'#a16207',silver:'#475569',fd:'#7c3aed',manual:'#64748b'},
+ HINT={stock:'e.g. RELIANCE.NS',mf:'AMFI scheme code',crypto:'e.g. bitcoin'},
+ SEARCH={stock:'Search stock or ETF',mf:'Search mutual fund',crypto:'Search coin'},METAL=t=>t==='gold'||t==='silver',MARKET=t=>!!HINT[t]||METAL(t);
+let H=[],P={},PINFO={},TOT=0,TYPEINV={},ftype='stock',editing=null,closing=null,filterType='all',sortBy='name',loadGeneration=0;
+
+const goldAdjustedPrice=(kind,price)=>kind==='gold'?price*1.12:price;
+const valuation = h => calc(h, P[h.id]);
+const idAttr = id => /^[A-Za-z0-9_-]{1,80}$/.test(id) ? id : '';
+const quoteStatus = h => {
+ if (!MARKET(h.type)||h.units===0) return '';
+ const quote = PINFO[h.id];
+ if (!quote) return ' · price unavailable';
+ if (quote.stale) return ' · stale quote';
+ return '';
+};
+function ledgerEntries(holding){
+ if(holding.transactions?.length){
+  return holding.transactions.map(trade=>({
+   date:trade.date,action:trade.opening?'Opening buy':trade.side==='buy'?'Buy':'Sell',
+   units:trade.units,price:trade.price,fee:trade.fee,
+   net:trade.units*trade.price*(trade.side==='buy'?-1:1)-trade.fee
+  }));
+ }
+ const market=MARKET(holding.type);
+ const {inv}=valuation(holding);
+ const opening={
+  date:dt(holding),action:holding.type==='fd'?'Deposit (from holding)':'Opening (from holding)',
+  units:market?holding.units:null,price:market?holding.buy:null,currency:holding.currency,
+  net:Number.isFinite(inv)?-inv:null
+ };
+ const entries=[opening];
+ if(holding.closed_date){
+  entries.push({date:holding.closed_date,action:'Closed (from holding)',
+   units:opening.units,net:holding.closed_value});
+ }
+ return entries;
+}
+
+function renderLedger(){
+ const terms=$('#ledger-search').value?.trim().toLowerCase().split(/\s+/).filter(Boolean)||[];
+ const entries=H.flatMap(holding=>ledgerEntries(holding).map((trade,index)=>({holding,trade,index})));
+ const rows=terms.length?entries.filter(({holding,trade})=>{
+  const words=[holding.name,holding.symbol,NAME[holding.type],trade.action,trade.date,
+   trade.date?fdate(trade.date):''].join(' ').toLowerCase();
+  return terms.every(term=>words.includes(term));
+ }):entries;
+ rows.sort((a,b)=>(b.trade.date||'').localeCompare(a.trade.date||'')||b.index-a.index);
+ const amount=value=>Number.isFinite(value)?inr2(value):'–';
+ $('#ledger-all').innerHTML=rows.length
+  ? `<table><thead><tr><th scope="col">Date</th><th scope="col">Investment</th><th scope="col">Action</th><th scope="col">Units</th><th scope="col">Unit price</th><th scope="col">Fees</th><th scope="col">Net amount (₹)</th><th scope="col">Actions</th></tr></thead><tbody>${
+   rows.map(({holding,trade,index})=>{
+    const link=holding.type==='stock'&&!holding.closed_date
+     ? `<button class="lnk" onclick="openLedger('${idAttr(holding.id)}')">${esc(holding.name)}</button>`
+     : esc(holding.name);
+    const net=Number.isFinite(trade.net)
+     ? (trade.net<0?'−':trade.net>0?'+':'')+inr2(Math.abs(trade.net))
+     : '–';
+    const id=idAttr(holding.id);
+    const actions=holding.transactions?.length
+     ? transactionActions(id,index)
+     : `<a class="lnk" href="#/edit/${id}">Edit holding</a>`;
+    return `<tr><td>${trade.date?fdate(trade.date):'–'}</td><td>${link}<small>${esc(NAME[holding.type])}${holding.symbol?' · '+esc(holding.symbol):''}</small></td><td>${trade.action}</td><td>${Number.isFinite(trade.units)?num(trade.units):'–'}</td><td>${Number.isFinite(trade.price)?money(trade.price,trade.currency||'INR'):'–'}</td><td>${amount(trade.fee)}</td><td>${net}</td><td>${actions}</td></tr>`;
+   }).join('')
+  }</tbody></table>`
+  : entries.length?'<p class="empty" role="status">No transactions match your search.</p>'
+  : '<p class="empty">No investments yet. <a href="#/add">Add an investment</a> to start your ledger.</p>';
+}
+
+$('#ledger-search').addEventListener('input',renderLedger);
+
+function render(){
+ if(!$('#ledger-page').hidden)renderLedger();
+ const open=H.filter(h=>!h.closed_date&&h.units!==0),closed=H.filter(h=>h.closed_date);
+ let inv=0,cur=0,real=H.reduce((sum,h)=>sum+(h.realized||0),0),missing=0,stale=0,missingBasis=0,missingClosedBasis=0;const byInvested={},F=[];let C=0;
+ // Portfolio totals always cover every open investment; the filter only narrows the table.
+ for(const h of open){
+  const c=valuation(h);
+  if(c.inv==null) missingBasis++;
+  else {inv+=c.inv;byInvested[h.type]=(byInvested[h.type]||0)+c.inv}
+  if(c.cur==null) missing++;
+  else {
+   cur+=c.cur;
+   if(PINFO[h.id]?.stale) stale++;
+  }
+  if(c.cur!=null&&dt(h)&&c.inv>0){F.push([new Date(dt(h)),-c.inv]);C+=c.cur}
+ }
+ const valueOf=h=>valuation(h).cur??-Infinity;
+ const gainOf=h=>{const c=valuation(h);return c.cur==null||c.inv==null?-Infinity:c.cur-c.inv};
+ let shown=H.filter(h=>!h.closed_date).filter(h=>filterType==='all'||h.type===filterType||(filterType==='metals'&&METAL(h.type))||(filterType==='fd'&&h.type==='manual'));
+ shown.sort((a,b)=>sortBy==='value'?valueOf(b)-valueOf(a):sortBy==='gain'?gainOf(b)-gainOf(a):sortBy==='loss'?gainOf(a)-gainOf(b):String(a.name).localeCompare(String(b.name)));
+ const orow=shown.map(h=>{const c=valuation(h),ok=c.cur!=null,g=ok&&c.inv!=null?c.cur-c.inv:null;
+  const m=MARKET(h.type);
+  const tax=taxTag(h);
+  return `<tr><td${MARKET(h.type)&&!METAL(h.type)?` onclick="holdingChart('${idAttr(h.id)}')" style="cursor:pointer" title="Show price chart"`:''}>${esc(h.name)}<small>${h.transactions&&h.units===0?'Sold out · ':''}${NAME[h.type]}${h.type==='fd'?` · ${esc(h.rate)}% till ${fdate(h.maturity)}`:m?` · ${esc(h.symbol)}`:''}${tax?` · ${tax}`:''}${quoteStatus(h)}</small></td>
+  <td class="num">${m?num(h.units)+(METAL(h.type)?' g':''):'–'}</td><td class="num">${m?money(h.buy,h.currency||'INR'): '–'}</td><td class="num">${c.inv==null?'FX unavailable':inr(c.inv)}</td><td class="num">${ok?inr(c.cur):'–'}${m&&ok?`<small>Unit: ${inr2(P[h.id])}${METAL(h.type)?'/g · '+esc(PINFO[h.id]?.source||'Gold API spot estimate')+(h.type==='gold'?' +12%':''):''}</small>`:''}</td>
+  <td class="${g>=0?'up':'down'}">${g==null?'–':sgn(g)+(c.inv?' ('+(g/c.inv*100).toFixed(1)+'%)':'')+ann(h,c.inv,c.cur)}</td>
+  <td><details class="menu"><summary aria-label="Actions">⋮</summary><div class="menu-items">${h.type==='stock'?`<button onclick="openLedger('${idAttr(h.id)}')">Transactions</button>`:''}${h.transactions?'':`<button onclick="location.hash='#/edit/${idAttr(h.id)}'">Edit</button><button onclick="openClose('${idAttr(h.id)}')">Close</button><button class="del" onclick="del('${idAttr(h.id)}')">Delete</button>`}</div></details></td></tr>`}).join('');
+ $('#open').innerHTML=H.some(h=>!h.closed_date)&&!shown.length?`<div class="empty">No open investments of this type.</div>`:shown.length?`<table><thead><tr><th>Holding</th><th>Units</th><th>Avg. buy price</th><th>Invested</th><th>Current value / unit</th><th>Gain / loss</th><th></th></tr></thead><tbody>${orow}</tbody></table>`
+  :`<div class="empty">${closed.length?'No open investments.':'No investments yet.'} <a href="#/add">Add one</a></div>`;
+ const crow=closed.map(h=>{const c=valuation(h),g=c.inv==null?null:c.out-c.inv,m=MARKET(h.type);if(g==null)missingClosedBasis++;else real+=g;
+  if(dt(h)&&c.inv>0)F.push([new Date(dt(h)),-c.inv],[new Date(h.closed_date),c.out]);
+  return `<tr><td${MARKET(h.type)&&!METAL(h.type)?` onclick="holdingChart('${idAttr(h.id)}')" style="cursor:pointer" title="Show price chart"`:''}>${esc(h.name)}<small>${NAME[h.type]}${m?` · ${esc(h.symbol)}`:''}</small></td><td>${m?num(h.units)+(METAL(h.type)?' g':''):'–'}</td>
+  <td>${dt(h)?fdate(dt(h)):'–'}</td><td>${fdate(h.closed_date)}</td><td>${c.inv==null?'FX unavailable':inr(c.inv)}</td><td>${inr(c.out)}</td>
+  <td class="${g>=0?'up':'down'}">${g==null?'–':sgn(g)+(c.inv?' ('+(g/c.inv*100).toFixed(1)+'%)':'')+ann(h,c.inv,c.out)}</td>
+  <td><details class="menu"><summary aria-label="Actions">⋮</summary><div class="menu-items"><button onclick="location.hash='#/edit/${idAttr(h.id)}'">Edit</button><button onclick="reopen('${idAttr(h.id)}')">Reopen</button><button class="del" onclick="del('${idAttr(h.id)}')">Delete</button></div></details></td></tr>`}).join('');
+ $('#closedWrap').hidden=!closed.length;
+ $('#closed').innerHTML=`<table><thead><tr><th>Holding</th><th>Units</th><th>Bought</th><th>Closed</th><th>Invested</th><th>Received</th><th>Realised gain</th><th></th></tr></thead><tbody>${crow}</tbody></table>`;
+ TOT=cur;let X='';
+ if(!H.some(h=>h.transactions?.some(t=>!t.opening))&&F.length&&!missing&&!stale&&!missingBasis&&!missingClosedBasis){F.push([new Date(),C]);if(Date.now()-Math.min(...F.map(f=>f[0]))>=YR){const r=xirr(F);if(r!=null)X=`XIRR ${(r*100).toFixed(1)}% a year`}}
+ const g=cur-inv;
+ $('#stats').innerHTML=`<div class="stat main"><span>${missing?'Value of priced holdings':'Current value'}</span><b>${missing===open.length&&missing?'–':inr(cur)}</b><span>${missing?missing+' missing price'+(missing===1?'':'s'):''}${missing&&stale?' · ':''}${stale?stale+' stale quote'+(stale===1?'':'s'):''}${!missing&&!stale?open.length+' open':''}</span></div>
+  <div class="stat"><span>Amount invested</span><b>${inr(inv)}</b><span>${missingBasis?missingBasis+' purchase FX rates missing':'in open investments'}</span></div>
+  <div class="stat"><span>Unrealised gain / loss</span><b class="${g>=0?'up':'down'}">${missing||missingBasis?'–':sgn(g)}</b><span>${inv&&!missing&&!missingBasis?(g/inv*100).toFixed(1)+'%':'–'} ${X?'· '+X:''}</span></div>
+  <div class="stat"><span>Realised gain / loss</span><b class="${real>=0?'up':'down'}">${missingClosedBasis?'–':sgn(real)}</b><span>${closed.length} closed holdings and recorded sales</span></div>`;
+ TYPEINV=byInvested;
+ $('#clr').hidden=!H.some(h=>String(h.id).startsWith('sample'));
+ $('#smp').hidden=false;
+ const fds=H.filter(h=>h.type==='fd'&&!h.closed_date&&h.maturity).map(h=>{
+   const md=new Date(h.maturity),days=Math.ceil((md-Date.now())/864e5);
+   return{h,md,days};
+  }).filter(x=>x.days>=0&&x.days<=366).sort((a,b)=>a.days-b.days);
+ $('#fdwrap').hidden=!fds.length;
+ $('#fdcalbody').innerHTML=fds.length?`<table><thead><tr><th>Fixed deposit</th><th>Principal</th><th>Rate</th><th>Matures on</th><th>Days left</th><th>Value at maturity</th></tr></thead><tbody>${
+  fds.map(({h,md,days})=>{const f=+h.freq||4,y=Math.max(0,(md-new Date(h.start))/YR);
+   return `<tr><td>${esc(h.name)}</td><td>${inr(h.principal)}</td><td>${esc(h.rate)}%</td><td>${fdate(md)}</td><td>${days}</td><td>${inr(h.principal*Math.pow(1+h.rate/100/f,f*y))}</td></tr>`}).join('')
+  }</tbody></table>`:'';
+ chart();
+}
+function money(n,c){return (+n).toLocaleString('en-IN',{style:'currency',currency:/^[A-Z]{3}$/.test(c)?c:'INR',maximumFractionDigits:2})}
+function taxTag(h){if(!h.date)return '';const days=(Date.now()-new Date(h.date).getTime())/864e5;if(h.type==='stock')return days>365?'LTCG':'STCG';if(h.type==='mf'){const c=String(h.tax_class||'').toLowerCase();if(c==='equity')return days>365?'LTCG':'STCG';if(c==='debt')return days>730?'LTCG':'STCG';}return ''}
+function niceStep(r,n){const raw=r/n,m=Math.pow(10,Math.floor(Math.log10(raw))),x=raw/m;return(x<=1?1:x<=2?2:x<=5?5:10)*m}
+function chart(){
+ const el=$('#chart');if(!el)return;
+ const entries=Object.entries(TYPEINV).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+ const total=entries.reduce((sum,[,v])=>sum+v,0);
+ if(!total){el.innerHTML='<div class="empty" style="grid-column:1/-1">Add investments to see the breakdown by type.</div>';return}
+ let angle=0;
+ const segments=entries.map(([type,value])=>{
+  const start=angle;
+  const share=value/total;
+  angle+=share*360;
+  return {type,value,share,start,end:angle};
+ });
+ const offset=segments.length>1?6:0;
+ const point=(angle,radius,cx=160,cy=130)=>[
+  cx+radius*Math.sin(angle*Math.PI/180),cy-radius*Math.cos(angle*Math.PI/180)
+ ];
+ const slices=segments.map(({type,start,end,share})=>{
+  if(segments.length===1)return `<circle cx="160" cy="130" r="81" fill="none" stroke="${COL[type]}" stroke-width="46"/>`;
+  const [cx,cy]=point((start+end)/2,offset);
+  const outerStart=point(start,104,cx,cy),outerEnd=point(end,104,cx,cy);
+  const innerStart=point(start,58,cx,cy),innerEnd=point(end,58,cx,cy);
+  const large=share>.5?1:0;
+  return `<path class="pie-slice" d="M${outerStart} A104,104 0 ${large} 1 ${outerEnd} L${innerEnd} A58,58 0 ${large} 0 ${innerStart} Z" fill="${COL[type]}"/>`;
+ }).join('');
+ const tilt=.68,depth=20;
+ const projectY=y=>130+(y-130)*tilt-10;
+ // Paint the extrusion back-to-front, then draw the original colours on top.
+ const walls=Array.from({length:depth},(_,index)=>
+  `<g transform="translate(0 ${120+depth-index}) scale(1 ${tilt}) translate(0 -130)">${slices}</g>`
+ ).join('');
+ const labels=segments.filter(({share})=>share>=.08).map(({start,end,share})=>{
+  const [x,y]=point((start+end)/2,81+offset);
+  return `<text class="slice-label" x="${x}" y="${projectY(y)+4}" text-anchor="middle">${(share*100).toFixed(1)}%</text>`;
+ }).join('');
+ const small=segments.filter(({share})=>share<.08).map(segment=>{
+  const [px,py]=point((segment.start+segment.end)/2,103+offset);
+  return {...segment,side:px<160?-1:1,px,py:projectY(py)};
+ });
+ const arrows=[-1,1].flatMap(side=>{
+  const group=small.filter(item=>item.side===side).sort((a,b)=>a.py-b.py);
+  let previous=-2;
+  return group.map(({type,share,px,py},i)=>{
+   const labelY=Math.max(previous+16,Math.min(py,246-16*(group.length-1-i)));
+   previous=labelY;
+   const edge=Math.sqrt(Math.max(0,(104+offset)**2-((labelY-120)/tilt)**2));
+   const bendX=160+(Math.max(edge,Math.abs(px-160))+7)*side,tipX=bendX+4*side;
+   const dx=bendX-px,dy=labelY-py,length=Math.hypot(dx,dy);
+   const ux=dx/length,uy=dy/length;
+   const color=COL[type];
+   const head=`${px},${py} ${px+6*ux+3*uy},${py+6*uy-3*ux} ${px+6*ux-3*uy},${py+6*uy+3*ux}`;
+   return `<path d="M${px},${py} L${bendX},${labelY} H${tipX}" stroke="${color}" stroke-width="1.5" fill="none"/>
+    <polygon points="${head}" fill="${color}"/>
+    <text x="${tipX+3*side}" y="${labelY+4}" text-anchor="${side===1?'start':'end'}">${(share*100).toFixed(1)}%</text>`;
+  });
+ }).join('');
+ const rows=segments.map(({type,value,share})=>`<tr><td><span class="type-dot" style="background:${COL[type]}"></span>${NAME[type]}</td><td>${inr(value)}</td><td>${(share*100).toFixed(1)}%</td></tr>`).join('');
+ el.innerHTML=`<div class="pie-wrap" aria-hidden="true"><svg class="pie-art" viewBox="0 0 320 260">
+  <g class="pie-depth" style="filter:brightness(.68)">${walls}</g>
+  <g class="pie-face" transform="translate(0 120) scale(1 ${tilt}) translate(0 -130)">${slices}</g>
+  ${labels}${arrows}
+  <text class="pie-caption" x="160" y="119" text-anchor="middle">Invested</text>
+  <text class="pie-total" x="160" y="137" text-anchor="middle">${inr(total)}</text>
+  </svg></div>
+  <div class="scroll"><table class="type-breakdown"><thead><tr><th>Investment type</th><th>Amount invested</th><th>Share</th></tr></thead><tbody>${rows}<tr class="type-total"><td>Total invested</td><td>${inr(total)}</td><td>100%</td></tr></tbody></table></div>`;
+}
+let historyRequest=0;
+async function loadHistory(){
+ const request=++historyRequest;
+ $('#history-readout').textContent='';
+ $('#history-events').replaceChildren();
+ $('#history-explain').hidden=true;
+ const plot=$('#history-plot'),note=$('#history-note');
+ try{
+  if(!H.length){
+   plot.innerHTML='<p class="empty">Add an investment to see portfolio history.</p>';
+   note.textContent='';
+   return;
+  }
+  const data=await api('/api/chart');
+  if(request!==historyRequest)return;
+  drawHistory(data);
+ }catch(error){
+  if(request!==historyRequest)return;
+  plot.textContent='Portfolio history could not be loaded. '+error.message;
+  note.textContent='';
+ }
+}
+function drawHistory({dates,invested,values,estimated}){
+ const plot=$('#history-plot'),note=$('#history-note');
+ const left=92,right=815,top=18,bottom=246;
+ const times=dates.map(day=>Date.parse(day+'T00:00:00Z'));
+ const span=times[times.length-1]-times[0]||1;
+ const eventsByDay=new Map();
+ for(const holding of H){
+  for(const entry of ledgerEntries(holding)){
+   if(!entry.date)continue;
+   if(!eventsByDay.has(entry.date))eventsByDay.set(entry.date,[]);
+   eventsByDay.get(entry.date).push({name:holding.name,unitLabel:METAL(holding.type)?'g':'units',...entry});
+  }
+ }
+ const max=Math.max(1,...invested.filter(Number.isFinite),...values.filter(Number.isFinite));
+ const step=Math.max(1,niceStep(max,10));
+ const ceiling=Math.ceil(max/step)*step;
+ const x=t=>left+(right-left)*(t-times[0])/span;
+ const y=v=>bottom-(bottom-top)*v/ceiling;
+ const line=(points,stepped)=>{
+  let prev=null;
+  return points.map((value,i)=>{
+   if(!Number.isFinite(value)){prev=null;return ''}
+   const px=x(times[i]),py=y(value);
+   const command=prev===null?`M${px},${py}`:stepped?`H${px}V${py}`:`L${px},${py}`;
+   prev=value;
+   return command;
+  }).join(' ');
+ };
+ const grid=Array.from({length:Math.round(ceiling/step)+1},(_,i)=>{
+  const value=i*step;
+  return `<line x1="${left}" x2="${right}" y1="${y(value)}" y2="${y(value)}" stroke="var(--line)"/><text x="${left-10}" y="${y(value)+5}" text-anchor="end">${short(value)}</text>`;
+ }).join('');
+ const ticks=Array.from({length:5},(_,i)=>{
+  const t=times[0]+span*i/4;
+  const label=new Date(t).toLocaleDateString('en-IN',{month:'short',year:'2-digit',timeZone:'UTC'});
+  return `<text x="${x(t)}" y="275" text-anchor="${i===4?'end':i===0?'start':'middle'}">${label}</text>`;
+ }).join('');
+ const investedDots=invested.map((amount,index)=>Number.isFinite(amount)
+  ? `<circle class="invested-dot" cx="${x(times[index])}" cy="${y(amount)}" r="3.5" fill="var(--inv)" stroke="var(--card)" stroke-width="1"/>`
+  : '').join('');
+ const markers=dates.map((date,index)=>{
+  if(!eventsByDay.has(date))return '';
+  const px=x(times[index]);
+  return `<path d="M${px},${bottom-8} l4,4 -4,4 -4,-4 z" fill="var(--ac)"/>`;
+ }).join('');
+ plot.innerHTML=`<svg viewBox="0 0 835 288" role="img" tabindex="0" aria-label="Use the left and right arrow keys to inspect this two-year chart comparing INR portfolio value and invested amount">
+  ${grid}${ticks}<path d="${line(invested,true)}" fill="none" stroke="var(--inv)" stroke-width="3" stroke-dasharray="7 4"/>
+  <path d="${line(values,false)}" fill="none" stroke="var(--ac)" stroke-width="3"/>
+  <g aria-hidden="true" pointer-events="none">${investedDots}</g>
+  ${markers}
+  <line class="history-crosshair" y1="${top}" y2="${bottom}" stroke="var(--mute)" stroke-dasharray="4 3" visibility="hidden"/>
+ </svg>`;
+ const svg=plot.querySelector('svg');
+ const crosshair=svg.querySelector('.history-crosshair');
+ const readout=$('#history-readout');
+ readout.textContent='Diamonds mark investment activity. Hover or use the arrow keys to inspect a date.';
+ let selected=times.length-1;
+ const comparison=$('#history-window');
+ const breakdown=$('#history-breakdown');
+ $('#history-explain').hidden=false;
+ const dateLabel=time=>new Date(time).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+ function explain(index){
+  const target=times[index]-(Number(comparison.value)||30)*86400000;
+  let start=index;
+  while(start>0&&times[start]>target)start--;
+  const activity=[];
+  for(let i=start+1;i<=index;i++)activity.push(...(eventsByDay.get(dates[i])||[]));
+  const valueChange=Number.isFinite(values[index])&&Number.isFinite(values[start])
+   ? values[index]-values[start]:null;
+  const known=activity.every(entry=>Number.isFinite(entry.net));
+  const cash=known?activity.reduce((sum,entry)=>sum-entry.net,0):null;
+  const remainder=valueChange!==null&&cash!==null?valueChange-cash:null;
+  const signed=value=>value===null?'Unavailable':value===0?inr(0):sgn(value);
+  breakdown.innerHTML=start===index
+   ? '<p class="sub">Choose a later date to compare portfolio values.</p>'
+   : `<span class="sub">${dateLabel(times[start])} – ${dateLabel(times[index])}</span>
+    <dl><div><dt>Portfolio value change</dt><dd>${signed(valueChange)}</dd></div>
+    <div><dt>Net recorded investment</dt><dd>${signed(cash)}</dd></div>
+    <div><dt>Change after recorded activity</dt><dd>${signed(remainder)}</dd></div></dl>
+    <span class="sub">${activity.length} recorded or reconstructed entries. The remaining change can include prices, FX, interest, and unrecorded activity.</span>`;
+ }
+ comparison.onchange=()=>explain(selected);
+ explain(selected);
+ function showPoint(index){
+  selected=index;
+  explain(index);
+  const px=x(times[index]);
+  crosshair.setAttribute('x1',px);
+  crosshair.setAttribute('x2',px);
+  crosshair.setAttribute('visibility','visible');
+  const amount=value=>Number.isFinite(value)?inr2(value):'Unavailable';
+  const day=new Date(times[index]).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+  readout.textContent=`${day} · Portfolio value ${amount(values[index])} · Invested amount ${amount(invested[index])}`;
+  const events=eventsByDay.get(dates[index])||[];
+  const items=events.map(event=>{
+   const item=document.createElement('li');
+   const quantity=Number.isFinite(event.units)?` · ${num(event.units)} ${event.unitLabel||'units'}`:'';
+   const cash=Number.isFinite(event.net)?` · Net cash ${sgn(event.net)}`:'';
+   item.textContent=`${event.name} · ${event.action}${quantity}${cash}`;
+   return item;
+  });
+  if(!items.length){
+   const item=document.createElement('li');
+   item.textContent='No investment activity recorded for this date.';
+   items.push(item);
+  }
+  $('#history-events').replaceChildren(...items);
+ }
+ function inspectPointer(event){
+  const bounds=svg.getBoundingClientRect();
+  if(!bounds.width)return;
+  const px=(event.clientX-bounds.left)*835/bounds.width;
+  const when=times[0]+span*(px-left)/(right-left);
+  const nearest=times.reduce((best,time,i)=>Math.abs(time-when)<Math.abs(times[best]-when)?i:best,0);
+  showPoint(nearest);
+ }
+ svg.addEventListener('pointermove',inspectPointer);
+ svg.addEventListener('pointerdown',inspectPointer);
+ svg.addEventListener('pointerleave',()=>crosshair.setAttribute('visibility','hidden'));
+ svg.addEventListener('focus',()=>showPoint(selected));
+ svg.addEventListener('keydown',event=>{
+  if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+  event.preventDefault();
+  const step=event.key==='ArrowLeft'?-1:1;
+  showPoint(Math.max(0,Math.min(times.length-1,selected+step)));
+ });
+ note.textContent='Invested amount is the purchase cost of positions open on each date. Portfolio value changes can reflect both trading activity and price or exchange-rate changes.'+
+  (estimated?' Manual assets use their entered value across the period. Holdings without a purchase date are assumed open at the start.':'')+
+  (values.some(v=>v===null)||invested.some(v=>v===null)?' Gaps indicate missing price or cost data, including dates without saved Gold or Silver valuations.':'');
+}
+let HDH=null, holdingChartRequest=0;
+const RANGES=[[30,'1 month'],[183,'6 months'],[365,'1 year'],[730,'2 years']];
+function holdingChart(id){
+ const holding=H.find(h=>h.id===id);
+ if(!holding||!MARKET(holding.type)||METAL(holding.type))return;
+ HDH=holding;
+ $('#hd-name').textContent=holding.name;
+ $('#hd-seg').innerHTML=RANGES.filter(([days])=>holding.type!=='crypto'||days<=365)
+  .map(([days,label])=>`<button type="button" data-d="${days}">${label}</button>`).join('');
+ $('#hd-seg').onclick=event=>{
+  const button=event.target.closest('button');
+  if(button)hdDraw(Number(button.dataset.d));
+ };
+ $('#hd').showModal();
+ hdDraw(365);
+}
+async function hdDraw(days){
+ const holding=HDH,request=++holdingChartRequest,el=$('#hchart');
+ document.querySelectorAll('#hd-seg button').forEach(button=>
+  button.setAttribute('aria-pressed',Number(button.dataset.d)===days));
+ $('#hd-sub').textContent=holding.symbol;
+ el.innerHTML='<p class="sub">Loading prices…</p>';
+ try{
+  const series=await api(`/api/series?type=${encodeURIComponent(holding.type)}&symbol=${encodeURIComponent(holding.symbol)}&days=${days}`);
+  if(request!==holdingChartRequest)return;
+  const end=new Date().toISOString().slice(0,10);
+  const endTime=Date.parse(end),startTime=endTime-days*86400000;
+  const points=Object.entries(series).filter(([date,price])=>
+   /^\d{4}-\d{2}-\d{2}$/.test(date)&&Date.parse(date)>=startTime&&date<=end&&Number.isFinite(price)).sort();
+  if(points.length<2){
+   el.innerHTML='<p class="sub">Not enough price history for this range.</p>';
+   return;
+  }
+  const dateLabel=(time,options)=>new Date(time).toLocaleDateString('en-IN',{...options,timeZone:'UTC'});
+  const labelOptions={day:'numeric',month:'short',year:'numeric'};
+  const [first,last]=[points[0],points[points.length-1]];
+  const foreign=holding.currency&&holding.currency!=='INR';
+  const cost=foreign?(holding.fx_buy?holding.buy*holding.fx_buy:null):holding.buy;
+  const showCost=Number.isFinite(cost)&&cost>0;
+  $('#hd-sub').textContent=`${holding.symbol} · ${dateLabel(Date.parse(first[0]),labelOptions)} – ${dateLabel(Date.parse(last[0]),labelOptions)} · Last close ${inr2(last[1])}`+
+   (showCost?` · Dashed line: buy price ${inr2(cost)}`:'');
+  const prices=points.map(([,price])=>price);
+  const min=Math.min(...prices,...(showCost?[cost]:[])),max=Math.max(...prices,...(showCost?[cost]:[]));
+  const padding=(max-min)*.07||Math.max(max*.02,.01);
+  const lo=Math.max(0,min-padding),hi=max+padding;
+  const width=Math.max(240,el.clientWidth||600),height=240,left=68,right=16,top=14,bottom=32;
+  const x=time=>left+(time-startTime)/(endTime-startTime)*(width-left-right);
+  const y=price=>top+(hi-price)/(hi-lo)*(height-top-bottom);
+  const path=points.map(([date,price],index)=>`${index?'L':'M'}${x(Date.parse(date))},${y(price)}`).join(' ');
+  const grid=[lo,(lo+hi)/2,hi].map(price=>
+   `<line x1="${left}" x2="${width-right}" y1="${y(price)}" y2="${y(price)}" stroke="var(--line)"/><text x="${left-7}" y="${y(price)+4}" text-anchor="end">${short(price)}</text>`).join('');
+  const ticks=[startTime,(startTime+endTime)/2,endTime].map((time,index)=>
+   `<text x="${x(time)}" y="${height-8}" text-anchor="${['start','middle','end'][index]}">${dateLabel(time,days<=31?{day:'numeric',month:'short'}:{month:'short',year:'2-digit'})}</text>`).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Historical closing prices in Indian rupees">
+   ${grid}${ticks}
+   ${showCost?`<line x1="${left}" x2="${width-right}" y1="${y(cost)}" y2="${y(cost)}" stroke="var(--inv)" stroke-dasharray="5 4"/>`:''}
+   <path d="${path}" fill="none" stroke="var(--ac)" stroke-width="2"/>
+  </svg>`;
+ }catch{
+  if(request===holdingChartRequest)el.innerHTML='<p class="sub">Could not load prices. Try again in a moment.</p>';
+ }
+}
+
+async function api(path, method='GET', body) {
+ const options = method==='GET' ? {} : {method,headers:J,body:JSON.stringify(body??{})};
+ const response = await fetch(path, options);
+ if(response.status===401){location.replace("/signin");throw new Error("Sign in to continue.");}
+ const result = await response.json();
+ if(!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
+ return result;
+}
+const reportError = error => alert(error.message || 'The tracker could not complete the request.');
+async function load(){
+ const generation=++loadGeneration;
+ const status=$('#updated');
+ status.textContent='Refreshing prices…';
+ try {
+  const holdings=await api('/api/holdings');
+  if(generation!==loadGeneration)return;
+  H=holdings;
+  const market=H.filter(h=>MARKET(h.type)&&!h.closed_date&&h.units!==0);
+  const marketIds=new Set(market.map(h=>h.id));
+  const key=h=>h.type+':'+h.symbol;
+  const previous=Object.fromEntries(Object.entries(PINFO).filter(([id])=>marketIds.has(id)));
+  P={};PINFO={};
+  for(const h of market){
+   const old=previous[h.id];
+   if(old?.key===key(h)){P[h.id]=old.price;PINFO[h.id]={...old,stale:true}}
+  }
+  render();
+  const prices=new Map();
+  await Promise.all(market.map(async h=>{
+   try{
+    const quoteKey=key(h);
+    if(h.type==='gold'&&h.kitco_bid){
+     if(!prices.has('kitco-fx'))prices.set('kitco-fx',api('/api/fx?currency=USD'));
+     const {rate}=await prices.get('kitco-fx');
+     if(generation!==loadGeneration||!Number.isFinite(rate)||rate<=0)return;
+     const price=goldAdjustedPrice(h.type,h.kitco_bid*rate/31.1034768);
+     P[h.id]=price;
+     PINFO[h.id]={key:quoteKey,price,source:'Kitco bid (manual)'};
+     return;
+    }
+    if(!prices.has(quoteKey)){
+     prices.set(quoteKey,api('/api/price?type='+h.type+'&symbol='+encodeURIComponent(h.symbol)));
+    }
+    const quote=await prices.get(quoteKey);
+    if(generation!==loadGeneration)return;
+    if(Number.isFinite(quote.price)&&quote.price>0){
+     const stale=Boolean(quote.quoted_at&&Date.now()-quote.quoted_at*1000>(h.type==='crypto'?3600000:4*864e5));
+     const price=goldAdjustedPrice(h.type,quote.price);
+     PINFO[h.id]={...quote,price,key:quoteKey,stale};
+     P[h.id]=price;
+    }
+    if(h.type==='stock'&&!h.currency)h.currency=quote.currency||'INR';
+    if(h.type==='stock'&&h.currency&&h.currency!=='INR'&&!h.fx_buy&&h.date){
+     const fx=await api('/api/fx?currency='+encodeURIComponent(h.currency)+'&date='+encodeURIComponent(h.date));
+     h.fx_buy=fx.rate;
+    }
+   }catch{
+    // A quote or purchase FX may be unavailable for an individual holding.
+   }
+  }));
+  if(generation!==loadGeneration)return;
+  render();
+  status.textContent='Last checked '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  const open=H.filter(h=>!h.closed_date&&h.units!==0);
+  const ready=open.length&&open.every(h=>!String(h.id).startsWith('sample')&&
+   Number.isFinite(valuation(h).cur)&&(!MARKET(h.type)||!PINFO[h.id]?.stale));
+  if(ready&&Number.isFinite(TOT)&&TOT>=0){
+   try {await api('/api/history','POST',{value:Math.round(TOT)})}
+   catch(error){status.textContent='Portfolio history could not be saved. '+error.message}
+  }
+  if(!$('#dash').hidden)void loadHistory();
+ }catch(error){
+  if(generation===loadGeneration)status.textContent='Could not load investments. '+error.message;
+ }
+}
+const put=h=>api('/api/holdings/'+encodeURIComponent(h.id),'PUT',h);
+async function del(id){
+ const h=H.find(x=>x.id===id);
+ if(!h||!confirm(`Delete "${h.name}"? This cannot be undone.`))return;
+ try {await api('/api/holdings/'+encodeURIComponent(id),'DELETE');await load()}
+ catch(error){reportError(error)}
+}
+async function reopen(id){
+ const holding=H.find(x=>x.id===id);
+ if(!holding)return;
+ const h={...holding};
+ delete h.closed_date;delete h.closed_value;
+ try {await put(h);await load()}catch(error){reportError(error)}
+}
+const ledgerForm=$('#ledger-form');
+let ledgerId,editedTrade;
+function transactionActions(id,index){
+ return `<button class="lnk" onclick="openLedger('${id}',${index})">Edit</button>
+  <button class="lnk del" onclick="deleteTrade('${id}',${index})">Delete</button>`;
+}
+async function deleteTrade(id,index){
+ const trade=H.find(h=>h.id===id)?.transactions?.[index];
+ if(!trade||!confirm('Delete this transaction and recalculate the holding?'))return;
+ try{
+  await api('/api/transactions/'+encodeURIComponent(id)+'/'+index,'DELETE',{original:trade});
+  await load();
+  if($('#ledger').open)openLedger(id);
+ }catch(error){reportError(error)}
+}
+function openLedger(id,index){
+ const holding=H.find(h=>h.id===id);
+ if(!holding)return;
+ ledgerId=id;
+ ledgerForm.reset();
+ const today=new Date();
+ ledgerForm.elements.date.value=new Date(today-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+ ledgerForm.elements.date.max=ledgerForm.elements.date.value;
+ $('#ledger-title').textContent=holding.name+' transactions';
+ const entries=holding.transactions;
+ editedTrade=entries?.[index]?{index,original:entries[index]}:null;
+ $('#ledger-form-title').textContent=editedTrade?'Edit transaction':'Add transaction';
+ if(editedTrade){
+  for(const field of ['date','side','units','price','fee']){
+   ledgerForm.elements[field].value=editedTrade.original[field];
+  }
+ }
+ $('#ledger-summary').textContent=entries
+  ? `${num(holding.units)} shares · Avg. cost ${inr2(holding.buy)} · Realised ${inr2(holding.realized)}`
+  : 'Your first transaction brings existing open lots for this ticker into the ledger as opening buys. Enter trades in INR.';
+ $('#ledger-rows').innerHTML=entries?.length
+  ? `<table class="type-breakdown"><thead><tr><th>Date</th><th>Action</th><th>Shares</th><th>Price (₹)</th><th>Fees (₹)</th><th>Actions</th></tr></thead><tbody>${
+    entries.map((t,index)=>`<tr><td>${fdate(t.date)}</td><td>${t.opening?'Opening buy':t.side==='buy'?'Buy':'Sell'}</td><td>${num(t.units)}</td><td>${inr2(t.price)}</td><td>${inr2(t.fee)}</td><td>${transactionActions(idAttr(id),index)}</td></tr>`).join('')
+   }</tbody></table>`
+  : '';
+ if(!$('#ledger').open)$('#ledger').showModal();
+}
+$('#ledger-done').onclick=()=>$('#ledger').close();
+ledgerForm.onsubmit=async event=>{
+ event.preventDefault();
+ const button=ledgerForm.querySelector('button[type=submit]');
+ button.disabled=true;
+ try{
+  const id=ledgerId;
+  const edit=editedTrade;
+  const path='/api/transactions/'+encodeURIComponent(id);
+  const body=Object.fromEntries(new FormData(ledgerForm));
+  if(edit)body.original=edit.original;
+  await api(edit?path+'/'+edit.index:path,edit?'PUT':'POST',body);
+  await load();
+  if($('#ledger').open)openLedger(id);
+ }catch(error){reportError(error)}
+ finally{button.disabled=false}
+};
+function openClose(id){closing=H.find(x=>x.id===id);if(!closing)return;$('#cl-name').textContent=closing.name;
+ const currency=closing.type==='stock'?(closing.currency||'INR'):'INR';
+ $('#cl-lab').textContent=METAL(closing.type)?'Sale price per gram (₹)':MARKET(closing.type)?`Sale price per unit (${currency})`:'Amount received (₹)';
+ $('#cl-amt').value='';$('#cl-date').value=new Date().toISOString().slice(0,10);$('#dlg').showModal()}
+$('#cl-no').onclick=()=>$('#dlg').close();
+$('#clf').onsubmit=async e=>{
+ e.preventDefault();
+ const amount=+$('#cl-amt').value,date=$('#cl-date').value;
+ const currency=closing.type==='stock'?(closing.currency||'INR'):'INR';
+ try{
+  const rate=currency==='INR'?1:(await api('/api/fx?currency='+encodeURIComponent(currency)+'&date='+date)).rate;
+  const proceeds=MARKET(closing.type)?amount*closing.units*rate:amount;
+  await put({...closing,closed_date:date,closed_value:Math.round(proceeds*100)/100});
+  $('#dlg').close();await load();
+ }catch(error){reportError(error)}
+};
+
+/* ---- form ---- */
+const f=$('#f');
+$('#seg').innerHTML=Object.entries(NAME).map(([k,v])=>`<button type="button" data-v="${k}">${v}</button>`).join('');
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled){ftype=b.dataset.v;fields()}};
+function fields(){const t=ftype;
+ document.querySelectorAll('[data-t]').forEach(l=>{const on=l.dataset.t.split(' ').includes(t);l.classList.toggle('h',!on);l.querySelectorAll('input,select').forEach(i=>i.disabled=!on)});
+ document.querySelectorAll('#closedBox input').forEach(i=>i.disabled=$('#closedBox').hidden);
+ document.querySelectorAll('#seg button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.v===t);b.disabled=!!editing});
+ f.elements.symbol.placeholder=HINT[t]||'';f.elements.symbol.required=Boolean(HINT[t]);
+ $('#metal-hint').hidden=!METAL(t);
+ f.elements.units.parentElement.querySelector('span').textContent=METAL(t)?'Pure-metal weight (grams)':'Number of units / shares';
+ f.elements.buy.parentElement.querySelector('span').textContent=METAL(t)?'Cost per gram (₹)':'Buy price per unit';
+ $('#nameL span').textContent=SEARCH[t]||'Name'}
+async function showForm(id){
+ if(id&&!H.length)H=await api('/api/holdings');
+ const h=id?H.find(x=>x.id===id):null;if(id&&!h){location.hash='#/investments';return}
+ editing=id||null;f.reset();ftype=h?h.type:'stock';
+ if(h)for(const[k,v]of Object.entries(h)){const i=f.elements[k];if(i&&i.tagName!=='BUTTON')i.value=v}
+ $('#ftitle').textContent=h?'Edit investment':'New investment';$('#closedBox').hidden=!(h&&h.closed_date);fields()}
+f.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(f));
+ ['units','buy','principal','rate','value','closed_value'].forEach(k=>{if(d[k]!==undefined&&d[k]!=='')d[k]=+d[k]});
+ const old=editing?H.find(x=>x.id===editing):{};const body={...old,...d,type:ftype};
+ try{
+  if(ftype==='stock'&&body.currency&&body.currency!=='INR'){
+   if(!old.fx_buy||old.currency!==body.currency||old.date!==body.date){
+    body.fx_buy=(await api('/api/fx?currency='+encodeURIComponent(body.currency)+'&date='+encodeURIComponent(body.date))).rate;
+   }
+  }else{body.fx_buy=1}
+  await api(editing?'/api/holdings/'+encodeURIComponent(editing):'/api/holdings',editing?'PUT':'POST',body);
+  location.hash='#/investments';
+ }catch(error){reportError(error)}
+};
+let tm;const nm=$('#nm'),sug=$('#sug');
+nm.oninput=()=>{clearTimeout(tm);if(!HINT[ftype]||nm.value.length<2){sug.innerHTML='';return}
+ tm=setTimeout(async()=>{try{const r=await (await fetch(`/api/search?type=${ftype}&q=${encodeURIComponent(nm.value)}`)).json();
+  sug._r=r;sug.innerHTML=r.length?r.map((x,i)=>`<div data-i="${i}">${esc(x.name)} <small>${esc(x.note)}</small></div>`).join(''):'<div>No matches</div>'}catch{}},300)};
+sug.onclick=e=>{const d=e.target.closest('[data-i]');if(!d)return;const x=sug._r[d.dataset.i];nm.value=x.name;f.elements.symbol.value=x.symbol;sug.innerHTML=''};
+document.addEventListener('click',e=>{if(!e.target.closest('#nameL'))sug.innerHTML='';
+ const m=e.target.closest('details.menu');document.querySelectorAll('details.menu[open]').forEach(d=>{if(d!==m)d.open=false})});
+
+/* ---- page routing + footer tools ---- */
+function route(){
+ const hash=location.hash||'#/';
+ const add=hash==='#/add',edit=hash.startsWith('#/edit/'),list=hash==='#/investments';
+ const ledger=hash==='#/ledger';
+ const dashboard=!(add||edit||list||ledger);
+ $('#dash').hidden=!dashboard;
+ $('#investments').hidden=!list;
+ $('#ledger-page').hidden=!ledger;
+ if(ledger)renderLedger();
+ $('#add').hidden=!(add||edit);
+ for(const [selector,active] of [['#nav-dash',dashboard],['#nav-investments',list],['#nav-ledger',ledger],['#nav-add',add]]){
+  const link=$(selector);
+  link.classList.toggle('on',active);
+  if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+ }
+ window.scrollTo(0,0);
+ if(add||edit)showForm(edit?hash.split('/')[2]:null).catch(reportError);else load();
+}
+window.addEventListener('hashchange',route);
+$('#zen').onclick=()=>document.body.classList.toggle('zen');
+$('#clr').onclick=async()=>{try{await api('/api/clear_samples','POST');await load()}catch(error){reportError(error)}};
+$('#csv').onclick=()=>{const k=['type','name','symbol','units','buy','currency','fx_buy','tax_class','date','principal','rate','start','maturity','freq','value','closed_date','closed_value'];
+ const cell=v=>{v=String(v??'');return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ const s=[k.join(',')].concat(H.map(h=>k.map(c=>{
+ const value=h[c];
+ if(typeof value==='string'&&['name','symbol'].includes(c)&&/^[\s]*[=+@-]/.test(value))return cell("'"+value);
+ return cell(value);
+ }).join(','))).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+s],{type:'text/csv'}));
+ a.download=`investments-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove()};
+$('#imp').onclick=()=>$('#file').click();
+$('#tpl').onclick=async()=>{try{
+ const r=await fetch('/api/template');
+ if(!r.ok)throw new Error('the app server returned an error ('+r.status+')');
+ const b=await r.blob();
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='import_template.csv';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}catch(e){alert('Could not download the template: '+e.message+'\n\nClose the tracker (Settings > Quit) and start it again from the desktop icon.')}};
+
+function importSummary(result){
+ const list=(names)=>names.slice(0,12).join(', ')+(names.length>12?` and ${names.length-12} more`:'');
+ const lines=[`To add (${result.added}): ${list(result.names)||'none'}`,
+              `Skipped (${result.skipped.length}): ${list(result.skipped)||'none'}`];
+ if(result.errors.length)lines.push(`Problems (${result.errors.length}):\n`+result.errors.slice(0,12).join('\n'));
+ return lines.join('\n\n');
+}
+$('#file').onchange=async e=>{
+ const input=e.target,file=input.files[0];
+ input.value='';
+ if(!file)return;
+ try{
+  if(file.size>3*1024*1024)throw new Error('Import files must be 3 MB or smaller.');
+  const data=await new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onload=()=>resolve(reader.result.split(',')[1]);
+   reader.onerror=()=>reject(new Error('Could not read the selected file.'));
+   reader.readAsDataURL(file);
+  });
+  const payload={filename:file.name,data};
+  const preview=await api('/api/import/preview','POST',payload);
+  const summary=importSummary(preview);
+  if(!preview.added){alert(summary);return}
+  if(!confirm('Import preview\n\n'+summary+'\n\nImport the valid investments?'))return;
+  const result=await api('/api/import','POST',payload);
+  alert(`Imported ${result.added} investment(s).`+
+   (result.skipped.length?`\nSkipped: ${result.skipped.length}`:'')+
+   (result.errors.length?'\n'+result.errors.slice(0,12).join('\n'):''));
+  if(location.hash==='#/investments')await load();else location.hash='#/investments';
+ }catch(error){reportError(error)}
+};
+$('#settingsBtn').onclick=()=>$('#settings').showModal();$('#settingsClose').onclick=()=>$('#settings').close();
+$('#filters').onclick=e=>{const b=e.target.closest('[data-filter]');if(!b)return;filterType=b.dataset.filter;$('#filters').querySelectorAll('[data-filter]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render()};$('#sort').onchange=e=>{sortBy=e.target.value;render()};
+$('#smp').onclick=async()=>{
+ try{
+  const res=await api('/api/samples','POST');
+  alert([res.added?`Added ${res.added} sample investments.`:'',
+         res.updated?'Updated the sample Reliance transaction ledger.':''].filter(Boolean).join(' ')||'Sample data is already loaded.');
+  await load();
+ }catch(error){reportError(error)}
+};
+$('#quit').onclick=async()=>{
+ try{await api('/signout','POST');location.replace('/signin')}catch(error){reportError(error)}
+};
+route();
+</script></body></html>
