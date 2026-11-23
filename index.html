@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Investments</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#14181f;--mute:#6b7280;--line:#e4e7ec;--ac:#0f766e;--onac:#fff;--up:#15803d;--down:#c2410c;--inv:#8a94a6}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#171d26;--ink:#e9edf3;--mute:#98a2b3;--line:#283140;--ac:#2dd4bf;--onac:#04201d;--up:#4ade80;--down:#fb923c;--inv:#7d889b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.bar{max-width:1040px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:6px}
+.brand{font-weight:700;font-size:17px;margin-right:auto}
+nav{display:flex;align-items:center;gap:2px}
+nav a{padding:8px 14px;border-radius:8px;color:var(--mute);text-decoration:none;font-weight:500;white-space:nowrap}
+nav a.on{color:var(--ink);background:var(--bg)}
+nav a.cta{background:var(--ac);color:var(--onac);margin-left:4px}
+main{max-width:1040px;margin:0 auto;padding:22px 20px 60px}
+h1{font-size:22px;margin:0 0 16px}h2{font-size:17px;margin:30px 0 10px}h3{font-size:14px;margin:22px 0 4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line)}
+.stat{background:var(--card);padding:16px 20px}.stat b{display:block;font-size:26px;font-weight:650;letter-spacing:-.01em}
+.stat.main b{font-size:30px}.stat span,.sub{color:var(--mute);font-size:13px}
+.up{color:var(--up)}.down{color:var(--down)}
+.alloc{padding:14px 20px;border-top:1px solid var(--line)}
+.abar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:8px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#chart{padding:20px;display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:28px;align-items:center}
+.pie{width:min(230px,65vw);aspect-ratio:1;border-radius:50%;margin:auto;border:1px solid var(--line);}
+.type-breakdown{width:100%;border-collapse:collapse;min-width:0}.type-breakdown th,.type-breakdown td{padding:10px 8px}.type-breakdown th:first-child,.type-breakdown td:first-child{padding-left:8px}.type-breakdown th:last-child,.type-breakdown td:last-child{padding-right:8px}
+.type-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px} .type-total{font-weight:700;border-top:1px solid var(--line)}
+@media(max-width:600px){#chart{grid-template-columns:1fr;gap:12px}.pie{width:min(210px,60vw)}}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:12px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;padding-left:20px}th:last-child,td:last-child{padding-right:20px}
+th{font-size:12px;font-weight:600;color:var(--mute)}tr:last-child td{border:0}
+td small{display:block;color:var(--mute);font-size:12px}
+.acts{display:flex;gap:4px;justify-content:flex-end}.num{text-align:right;font-variant-numeric:tabular-nums}.menu{position:relative;display:inline-block}.menu summary{list-style:none;cursor:pointer;border-radius:7px;padding:3px 9px;font-size:20px;line-height:1.2}.menu summary::-webkit-details-marker{display:none}.menu[open] summary{background:var(--bg)}.menu-items{position:absolute;right:0;top:28px;z-index:8;min-width:116px;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px #0002;display:grid}.menu-items button{text-align:left;border:0;background:none;padding:8px;border-radius:6px;cursor:pointer}.menu-items button:hover{background:var(--bg)}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.pill{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--mute);font-size:13px}.pill[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:var(--onac)}.toolbar select{height:36px;padding:5px 9px}.status{font-size:12px;color:var(--mute);margin-left:auto}.settings{width:min(480px,94vw)}.settings .fa{flex-wrap:wrap;margin-top:10px}.settings label{margin-top:10px}.settings .sub{margin:0}.settings .end{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);justify-content:flex-end}
+button,input,select{font:inherit;color:var(--ink)}
+.lnk{background:none;border:0;color:var(--ac);cursor:pointer;padding:4px 6px;border-radius:6px}.lnk:hover{background:var(--bg)}.lnk.del{color:var(--down)}
+.btn{background:var(--ac);color:var(--onac);border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}.foot .btn{padding:8px 14px;font-weight:500}
+.empty{padding:34px 20px;text-align:center;color:var(--mute)}.empty a{color:var(--ac)}
+.warn{margin:0 0 16px;padding:12px 16px;border:1px solid var(--down);border-radius:10px;background:var(--card);font-size:14px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.zen #summary,.zen #open,.zen #closed,.zen #chart,.zen #fdcalbody{filter:blur(8px)}
+.form{max-width:680px;padding:22px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.seg button{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+.seg button:disabled{opacity:.5;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);position:relative}
+label.h,#closedBox[hidden]{display:none}
+input,select{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);height:42px}
+#sug{position:absolute;top:100%;left:0;right:0;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto;margin-top:2px}
+#sug:empty{display:none}#sug div{padding:9px 12px;cursor:pointer;color:var(--ink);font-size:14px}#sug div:hover{background:var(--bg)}#sug small{color:var(--mute)}
+.fa{display:flex;gap:10px;margin-top:22px;align-items:center}
+#closedBox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}#closedBox h2{margin:0 0 10px;font-size:15px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);padding:22px;width:min(380px,92vw);max-height:92vh;overflow:auto}
+dialog::backdrop{background:#0008}dialog h2{margin:0 0 4px}
+/* phones: each holding becomes a card instead of a wide table row */
+@media(max-width:640px){
+ .bar{flex-wrap:wrap;padding:10px 12px;row-gap:8px}.brand{flex-basis:100%}nav{width:100%}nav a{padding:8px 12px}nav a.cta{margin-left:auto}
+ main{padding:16px 12px 60px}.stat{padding:14px 16px}.stat b{font-size:22px}.stat.main b{font-size:26px}
+ .cards table{min-width:0;display:block}.cards thead{display:none}.cards tbody{display:block}
+ .cards tr{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:14px 16px;border-bottom:1px solid var(--line);position:relative}
+ .cards tr:last-child{border-bottom:0}
+ .cards td,.cards td:first-child,.cards td:last-child{display:block;padding:0;border:0;text-align:left;white-space:normal}
+ .cards td:first-child{grid-column:1/-1;padding-right:40px;font-weight:600}.cards td:first-child small{font-weight:400}
+ .cards td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--mute)}
+ .cards td.na{display:none}.cards td.act,.cards td.act:last-child{position:absolute;top:8px;right:8px}
+ .toolbar select{margin-left:0}.foot .btn{flex:1 1 44%}
+}
+</style></head><body>
+<header><div class="bar"><span class="brand">My Investments</span>
+<nav><a href="#/" id="nav-dash">Dashboard</a><a href="#/add" id="nav-add" class="cta">+ New investment</a><button class="btn ghost" id="settingsBtn" type="button" aria-label="Settings" style="margin-left:6px;padding:8px 12px">⚙</button></nav></div></header>
+<main>
+<div id="warn" class="warn" hidden></div>
+<div id="dash">
+ <div class="panel" id="summary"><div class="stats" id="stats"></div><div class="alloc"><div class="abar" id="abar"></div><div class="legend" id="legend"></div></div></div>
+ <h2>Investment by type</h2>
+ <div class="panel"><div id="chart" aria-live="polite"></div><div id="updated" class="status" style="padding:0 20px 14px"></div></div>
+ <div id="fdwrap" hidden><h2>FD maturities — next 12 months</h2>
+ <div class="panel"><div class="scroll cards" id="fdcalbody"></div></div></div>
+ <h2>Holdings</h2><div class="toolbar" id="filters"><button class="pill" data-filter="all" aria-pressed="true">All</button><button class="pill" data-filter="stock">Stocks / ETFs</button><button class="pill" data-filter="mf">Mutual Funds</button><button class="pill" data-filter="crypto">Crypto</button><button class="pill" data-filter="fd">Fixed Income</button><select id="sort" aria-label="Sort holdings"><option value="name">Sort: Name</option><option value="value">Largest position</option><option value="gain">Highest gain</option><option value="loss">Largest loss</option></select></div><div class="panel"><div class="scroll cards" id="open"></div></div>
+ <div id="closedWrap" hidden><h2>Closed investments</h2><div class="panel"><div class="scroll cards" id="closed"></div></div></div>
+ <div class="foot"><button class="btn ghost" id="zen">Hide amounts</button><button class="btn ghost" id="csv">Export CSV</button><button class="btn ghost" id="imp">Import from file</button><button class="btn ghost" id="tpl">Download template</button><input type="file" id="file" accept=".xlsx,.csv" hidden></div>
+</div>
+
+<div id="add" hidden>
+ <h1 id="ftitle">New investment</h1>
+ <form id="f" class="panel form" autocomplete="off">
+  <div class="seg" id="seg"></div>
+  <div class="grid">
+   <label id="nameL"><span>Name</span><input name="name" id="nm" required><div id="sug"></div></label>
+   <label data-t="stock mf crypto" id="symL"><span>Symbol / code</span><input name="symbol"></label>
+   <label data-t="stock mf crypto"><span>Number of units / shares</span><input name="units" type="number" step="any" min="0" required></label>
+   <label data-t="stock mf crypto"><span>Buy price per unit</span><input name="buy" type="number" step="any" min="0" required></label><label data-t="stock"><span>Buy currency</span><select name="currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option></select></label><label data-t="mf"><span>Fund tax category (optional)</span><select name="tax_class"><option value="">Not specified</option><option value="equity">Equity-oriented</option><option value="debt">Debt-oriented</option></select></label>
+   <label data-t="stock mf crypto manual"><span>Buy date</span><input name="date" type="date" required></label>
+   <label data-t="fd manual"><span>Amount invested (₹)</span><input name="principal" type="number" step="any" min="0" required></label>
+   <label data-t="fd"><span>Interest rate (% a year)</span><input name="rate" type="number" step="any" required></label>
+   <label data-t="fd"><span>Start date</span><input name="start" type="date" required></label>
+   <label data-t="fd"><span>Maturity date</span><input name="maturity" type="date" required></label>
+   <label data-t="fd"><span>Interest compounded</span><select name="freq"><option value="4">Quarterly</option><option value="12">Monthly</option><option value="2">Half-yearly</option><option value="1">Yearly</option></select></label>
+   <label data-t="manual"><span>Current value (₹)</span><input name="value" type="number" step="any" min="0" required></label>
+  </div>
+  <div id="closedBox" hidden><h2>Closed investment</h2><div class="grid">
+   <label><span>Closed on</span><input name="closed_date" type="date" required></label>
+   <label><span>Total amount received (₹)</span><input name="closed_value" type="number" step="any" min="0" required></label></div></div>
+  <div class="fa"><button class="btn" type="submit">Save</button><a class="btn ghost" href="#/" style="text-decoration:none">Cancel</a></div>
+ </form>
+</div>
+</main>
+
+<dialog id="dlg"><form id="clf" method="dialog"><h2>Close investment</h2><p class="sub" id="cl-name"></p>
+ <div class="grid"><label><span>Closed on</span><input id="cl-date" type="date" required></label>
+ <label><span id="cl-lab">Amount received (₹)</span><input id="cl-amt" type="number" step="any" min="0" required></label></div>
+ <div class="fa"><button class="btn" type="submit">Close investment</button><button class="btn ghost" type="button" id="cl-no">Cancel</button></div></form></dialog>
+
+<dialog id="settings" class="settings"><h2>Settings</h2>
+ <div id="set-prices" hidden>
+  <h3>Live prices</h3>
+  <p class="sub" id="set-proxy-note">Stock and ETF prices need your own small price proxy (the README shows how to set one up, about 10 minutes). Mutual fund and crypto prices work without it.</p>
+  <label><span>Price proxy address</span><input id="set-proxy" type="url" inputmode="url" placeholder="https://investment-prices.yourname.workers.dev"></label>
+  <label><span>CoinGecko API key (optional, for crypto if prices keep failing)</span><input id="set-cg" autocomplete="off" spellcheck="false"></label>
+  <div class="fa"><button class="btn ghost" id="set-save" type="button">Save and test</button><span class="sub" id="set-msg" role="status"></span></div>
+ </div>
+ <h3>Your data</h3>
+ <p class="sub" id="set-where"></p>
+ <div class="fa"><button class="btn ghost" id="bkp" type="button">Download backup</button><button class="btn ghost" id="rst" type="button">Restore from backup</button><input type="file" id="rfile" accept=".json,application/json" hidden></div>
+ <h3>Sample data</h3>
+ <p class="sub">Eight example investments to try the app with.</p>
+ <div class="fa"><button class="btn ghost" id="smp" type="button">Load sample data</button><button class="btn ghost" id="clr" type="button" hidden>Clear sample data</button></div>
+ <div class="fa end"><button class="btn ghost" id="quit" type="button" hidden>Quit</button><button class="btn ghost" id="logout" type="button" hidden>Log out</button><button class="btn" id="settingsClose" type="button">Done</button></div>
+</dialog>
+
+<dialog id="hd" style="width:min(680px,94vw)"><h2 id="hd-name"></h2><p class="sub" id="hd-sub"></p>
+<div class="seg" id="hd-seg"></div>
+<div id="hchart"></div>
+<div class="fa"><button class="btn ghost" type="button" onclick="$('#hd').close()">Close</button></div></dialog>
+
+<script>
+/* ============================================================================
+   In-browser "backend". This replaces tracker.py: it keeps your investments in
+   this browser's storage, fetches prices, and reads import files.
+   The page below talks to it through api('/api/...') exactly as it would talk
+   to a server.
+   ============================================================================ */
+const api=(()=>{
+const TYPES=new Set(['stock','mf','crypto','fd','manual']);
+const YH='https://query1.finance.yahoo.com',MF='https://api.mfapi.in',CG='https://api.coingecko.com/api/v3';
+const NUMF=['units','buy','principal','rate','value','closed_value','fx_buy'],
+ STRF=['name','symbol','currency','tax_class','date','start','maturity','closed_date','freq'];
+
+/* ---- storage (localStorage, with an in-memory fallback so the page still works) ---- */
+const memStore={};let storageOK=true;
+try{localStorage.setItem('inv.test','1');localStorage.removeItem('inv.test')}catch{storageOK=false}
+const LS={
+ get(k,d){try{const v=localStorage.getItem('inv.'+k);if(v!=null)return JSON.parse(v)}catch{}return k in memStore?memStore[k]:d},
+ set(k,v){memStore[k]=v;try{localStorage.setItem('inv.'+k,JSON.stringify(v))}catch{storageOK=false}}};
+const holdings=()=>{const h=LS.get('holdings',[]);return Array.isArray(h)?h:[]},saveHoldings=h=>LS.set('holdings',h);
+const cfg=()=>LS.get('settings',{});
+const newId=()=>{const a=crypto.getRandomValues(new Uint8Array(4));return[...a].map(b=>b.toString(16).padStart(2,'0')).join('')};
+const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const qs=o=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+const cgk=()=>cfg().cgKey?'&x_cg_demo_api_key='+encodeURIComponent(cfg().cgKey):'';
+
+/* ---- network ----
+   Yahoo Finance refuses requests made directly from a web page, so those always go
+   through the price proxy. mfapi.in and CoinGecko are called directly, and fall back
+   to the proxy if the direct call fails. */
+// A price service on the same site (api/prices, as deployed on Vercel) is found automatically.
+let builtin=null;
+const builtinProxy=()=>builtin||(builtin=(async()=>{
+ if(!/^https?:$/.test(location.protocol))return'';
+ try{const u=new URL('api/prices',location.href).href,r=await fetch(u,{signal:AbortSignal.timeout(6000)});
+  if(r.ok&&/price proxy/.test((await r.json()).about||''))return u}catch{}
+ return''})());
+async function getJSON(url){
+ const proxy=(cfg().proxy||await builtinProxy()).replace(/\/+$/,''),tries=[];
+ if(!url.startsWith(YH))tries.push(url);
+ if(proxy)tries.push(proxy+'?url='+encodeURIComponent(url));
+ if(!tries.length)throw new Error('Stock prices need the price proxy (see Settings)');
+ let err;
+ for(const u of tries){
+  try{const r=await fetch(u,{signal:AbortSignal.timeout(15000)});if(r.ok)return await r.json();err=new Error('price source answered '+r.status)}
+  catch(e){err=e}}
+ throw err}
+const result=r=>{const x=r&&r.chart&&r.chart.result&&r.chart.result[0];if(!x)throw new Error('no data');return x};
+
+/* ---- cache: 10 minutes in memory; prices are also kept in storage so a failed
+   refresh can show the last good price instead of nothing ---- */
+const mem=new Map(),inflight=new Map();
+function cached(key,ttl,fn,persist){
+ const now=Date.now();let c=mem.get(key);
+ if(!c&&persist)c=LS.get('pcache',{})[key];
+ if(c&&now-c.t<ttl)return Promise.resolve(c.v);
+ if(inflight.has(key))return inflight.get(key);
+ const p=(async()=>{
+  try{const v=await fn();mem.set(key,{t:now,v});
+   if(persist){const pc=LS.get('pcache',{});pc[key]={t:now,v};LS.set('pcache',pc)}
+   return v}
+  catch(e){if(c&&persist)return typeof c.v==='object'?{...c.v,stale:true}:c.v;throw e}
+  finally{inflight.delete(key)}})();
+ inflight.set(key,p);return p}
+
+/* ---- prices ---- */
+const fxRate=cur=>!cur||cur==='INR'?Promise.resolve(1):cached('fx:'+cur,864e5,async()=>{
+ const p=+result(await getJSON(`${YH}/v8/finance/chart/${encodeURIComponent(cur+'INR=X')}`)).meta.regularMarketPrice;
+ if(!Number.isFinite(p))throw new Error('no FX rate');return p},true);
+async function fxRateOn(cur,date){
+ if(!cur||cur==='INR')return 1;
+ if(!date)return fxRate(cur);
+ const start=Date.parse(date+'T00:00:00Z')/1000;
+ if(!Number.isFinite(start))throw new Error('bad date');
+ return cached(`fxon:${cur}:${date}`,864e5,async()=>{
+  const res=result(await getJSON(`${YH}/v8/finance/chart/${encodeURIComponent(cur+'INR=X')}?${qs({period1:start,period2:start+5*86400,interval:'1d'})}`));
+  const v=((res.indicators&&res.indicators.quote&&res.indicators.quote[0]||{}).close||[]).filter(x=>x!=null);
+  if(!v.length)throw new Error('historical FX rate unavailable');return +v[0]})}
+// CoinGecko allows very few calls a minute without a key, so all coins go in one request.
+let batch=null;
+function cryptoPrice(id){
+ if(!batch){const b=batch={ids:new Set()};
+  b.p=new Promise(r=>setTimeout(r,30)).then(()=>{batch=null;
+   return getJSON(`${CG}/simple/price?${qs({ids:[...b.ids].join(','),vs_currencies:'inr'})}${cgk()}`)})}
+ batch.ids.add(id);
+ return batch.p.then(r=>{const p=r&&r[id]&&r[id].inr;if(p==null)throw new Error('no price');return +p})}
+function priceInfo(kind,sym){
+ if(!['stock','mf','crypto'].includes(kind)||!sym)return Promise.reject(new Error('unknown type'));
+ return cached(`pi:${kind}:${sym}`,6e5,async()=>{
+  if(kind==='stock'){
+   const m=result(await getJSON(`${YH}/v8/finance/chart/${encodeURIComponent(sym)}`)).meta,native=+m.regularMarketPrice,currency=m.currency||'INR';
+   if(!Number.isFinite(native))throw new Error('no price');
+   const fx=await fxRate(currency);return{price:native*fx,native_price:native,currency,fx}}
+  const p=kind==='mf'?parseFloat((await getJSON(`${MF}/mf/${encodeURIComponent(sym)}/latest`)).data[0].nav):await cryptoPrice(sym);
+  if(!Number.isFinite(p))throw new Error('no price');
+  return{price:p,native_price:p,currency:'INR',fx:1}},true)}
+async function search(kind,q){
+ if(q.length<2)return[];
+ if(kind==='stock'){const r=await getJSON(`${YH}/v1/finance/search?${qs({q,quotesCount:8,newsCount:0})}`);
+  return(r.quotes||[]).filter(x=>['EQUITY','ETF'].includes(x.quoteType)).map(x=>({symbol:x.symbol,name:x.shortname||x.longname||x.symbol,note:`${x.symbol} · ${x.exchDisp||''}`}))}
+ if(kind==='mf'){const r=await getJSON(`${MF}/mf/search?${qs({q})}`);
+  return(Array.isArray(r)?r:[]).slice(0,8).map(x=>({symbol:String(x.schemeCode),name:x.schemeName,note:'code '+x.schemeCode}))}
+ if(kind==='crypto'){const r=await getJSON(`${CG}/search?${qs({query:q})}${cgk()}`);
+  return(r.coins||[]).slice(0,8).map(x=>({symbol:x.id,name:x.name,note:String(x.symbol).toUpperCase()}))}
+ return[]}
+function series(kind,sym,days){
+ return cached(`se:${kind}:${sym}:${days}`,6e5,async()=>{const out={};
+  if(kind==='stock'){const rng=days<=31?'1mo':days<=183?'6mo':days<=366?'1y':'2y';
+   const res=result(await getJSON(`${YH}/v8/finance/chart/${encodeURIComponent(sym)}?${qs({range:rng,interval:days<=31?'1d':'1wk'})}`)),fx=await fxRate(res.meta.currency||'INR');
+   const ts=res.timestamp||[],cl=(res.indicators&&res.indicators.quote&&res.indicators.quote[0]||{}).close||[];
+   ts.forEach((t,i)=>{if(cl[i]!=null)out[iso(new Date(t*1000))]=+(cl[i]*fx).toFixed(4)})}
+  else if(kind==='mf'){const cut=iso(new Date(Date.now()-days*864e5));
+   for(const d of(await getJSON(`${MF}/mf/${encodeURIComponent(sym)}`)).data||[]){
+    const[dd,mm,yy]=String(d.date).split('-'),k=`${yy}-${mm}-${dd}`,v=parseFloat(d.nav);
+    if(yy&&k>=cut&&Number.isFinite(v))out[k]=v}}
+  else if(kind==='crypto'){const r=await getJSON(`${CG}/coins/${encodeURIComponent(sym)}/market_chart?${qs({vs_currency:'inr',days:Math.min(days,365),interval:'daily'})}${cgk()}`);
+   for(const[t,p]of r.prices||[])out[iso(new Date(t))]=+(+p).toFixed(4)}
+  else throw new Error('unknown type');
+  return out})}
+
+/* ---- reading import files: .csv, and .xlsx (a zip of XML) without any library ---- */
+function parseCSV(text){const rows=[];let row=[],cell='',q=false;
+ text=text.replace(/^﻿/,'');
+ for(let i=0;i<text.length;i++){const c=text[i];
+  if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+  else if(c==='"')q=true;
+  else if(c===','){row.push(cell);cell=''}
+  else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}
+  else cell+=c}
+ if(cell!==''||row.length){row.push(cell);rows.push(row)}
+ return rows.filter(r=>r.some(c=>String(c).trim()))}
+function unzip(b){
+ const dv=new DataView(b.buffer,b.byteOffset,b.byteLength),td=new TextDecoder();
+ let e=b.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;
+ if(e<0)throw new Error('not a valid .xlsx file');
+ const files={};let p=dv.getUint32(e+16,true);
+ for(let n=dv.getUint16(e+10,true);n>0&&p+46<=b.length&&dv.getUint32(p,true)===0x02014b50;n--){
+  const nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true);
+  files[td.decode(b.subarray(p+46,p+46+nl))]={method:dv.getUint16(p+10,true),size:dv.getUint32(p+20,true),full:dv.getUint32(p+24,true),off:dv.getUint32(p+42,true)};
+  p+=46+nl+xl+cl}
+ return{names:Object.keys(files),async text(name){const f=files[name];
+  if(f.full>50e6)throw new Error('file is too large');
+  const s=f.off+30+dv.getUint16(f.off+26,true)+dv.getUint16(f.off+28,true),data=b.subarray(s,s+f.size);
+  if(f.method===0)return td.decode(data);
+  if(f.method!==8)throw new Error('unsupported compression in the .xlsx file');
+  if(typeof DecompressionStream==='undefined')throw new Error('this browser cannot open .xlsx files - save the sheet as CSV and import that');
+  return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text()}}}
+const colIdx=ref=>{let n=0;for(const ch of(/^[A-Z]+/.exec(ref)||['A'])[0])n=n*26+ch.charCodeAt(0)-64;return n-1};
+async function parseTable(bytes){
+ if(!(bytes[0]===0x50&&bytes[1]===0x4b))return parseCSV(new TextDecoder().decode(bytes));
+ const z=unzip(bytes),xml=async n=>{const d=new DOMParser().parseFromString(await z.text(n),'application/xml');
+  if(d.getElementsByTagName('parsererror').length)throw new Error('damaged .xlsx file');return d};
+ const tag=(el,n)=>[...el.getElementsByTagNameNS('*',n)],txt=el=>tag(el,'t').map(t=>t.textContent||'').join('');
+ const shared=z.names.includes('xl/sharedStrings.xml')?tag(await xml('xl/sharedStrings.xml'),'si').map(txt):[];
+ const sheets=z.names.filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort();
+ if(!sheets.length)throw new Error('no worksheet found in the xlsx file');
+ const rows=[];
+ for(const row of tag(await xml(sheets[0]),'row')){const cells={};let max=-1;
+  for(const c of tag(row,'c')){const t=c.getAttribute('t')||'',v=tag(c,'v')[0];let val;
+   if(t==='inlineStr')val=txt(c);else if(!v)continue;else if(t==='s')val=shared[parseInt(v.textContent)];else val=v.textContent;
+   if(val!=null&&String(val).trim()!==''){const i=colIdx(c.getAttribute('r')||'A1');cells[i]=String(val).trim();max=Math.max(max,i)}}
+  if(max>=0)rows.push(Array.from({length:max+1},(_,i)=>cells[i]||''))}
+ return rows}
+const serialDate=v=>new Date(Date.UTC(1899,11,30)+parseInt(v)*864e5).toISOString().slice(0,10);
+
+async function doImport(body){
+ let bytes,rows;
+ try{bytes=Uint8Array.from(atob(body.data),c=>c.charCodeAt(0))}catch{return{error:'invalid file data'}}
+ try{rows=await parseTable(bytes)}catch(e){return{error:'could not read file: '+e.message}}
+ if(!rows.length)return{error:'file is empty'};
+ const hdr=rows[0].map(c=>String(c).trim().toLowerCase());
+ const col=(...names)=>{for(const n of names){const i=hdr.indexOf(n);if(i>=0)return i}return null};
+ const idx={type:col('type'),name:col('name'),symbol:col('symbol','code','ticker'),units:col('units','qty','quantity','shares'),
+  buy:col('buy','buy price','avg buy price','buy_price','avg. buy price'),date:col('date','buy date','buy_date'),
+  principal:col('principal','amount invested','invested','amount'),rate:col('rate','interest rate','interest_rate'),
+  start:col('start','start date','start_date'),maturity:col('maturity','maturity date','maturity_date'),freq:col('freq','frequency','compounded'),
+  value:col('value','current value','current_value'),currency:col('currency'),fx_buy:col('fx_buy','buy fx'),tax_class:col('tax_class'),
+  closed_date:col('closed_date','closed date'),closed_value:col('closed_value','closed value')};
+ if(hdr.some(h=>h.includes('trade no'))&&hdr.some(h=>h.includes('trade type'))&&hdr.some(h=>h.includes('segment')))return dhanImport(rows);
+ if(idx.type==null||idx.name==null)return{error:"first row must be a header with at least 'type' and 'name' columns - use the Download template button"};
+ const db=holdings(),skipped=[],errors=[];let added=0;
+ const dval=v=>/^\d{5}$/.test(v)?serialDate(v):v;
+ const FREQ={quarterly:'4',monthly:'12','half-yearly':'2','half yearly':'2',yearly:'1'};
+ rows.slice(1).forEach((r,n)=>{
+  try{
+   const g=k=>idx[k]!=null&&idx[k]<r.length?String(r[idx[k]]).trim():'';
+   const typ=g('type').toLowerCase();
+   if(!TYPES.has(typ))throw new Error(`unknown type '${g('type')}' (use stock/mf/crypto/fd/manual)`);
+   const name=g('name');if(!name)throw new Error('missing name');
+   const rec={type:typ,name};
+   for(const k of['symbol','currency','tax_class'])if(g(k))rec[k]=g(k).toUpperCase();
+   for(const k of['date','start','maturity','closed_date'])if(g(k))rec[k]=dval(g(k));
+   for(const k of['units','buy','principal','rate','value','closed_value','fx_buy'])if(g(k)){
+    const x=Number(g(k).replace(/,/g,''));if(!Number.isFinite(x))throw new Error(`'${k}' must be a number, got '${g(k)}'`);rec[k]=x}
+   if(g('freq'))rec.freq=FREQ[g('freq').toLowerCase()]||g('freq');
+   if(['stock','mf','crypto'].includes(typ)&&(!rec.symbol||!rec.units||!rec.buy))throw new Error('needs symbol, units and buy price');
+   if(typ==='fd')for(const k of['principal','rate','start','maturity'])if(!(k in rec))throw new Error(`FD needs '${k}' (and freq if not quarterly)`);
+   if(typ==='manual'&&!('value'in rec)&&!('principal'in rec))throw new Error('needs value (or principal)');
+   // same duplicate rule as tracker.py
+   const dup=db.some(h=>h.type===rec.type&&(rec.symbol
+     ?String(h.symbol||'').toUpperCase()===rec.symbol.toUpperCase()&&(h.units===rec.units||h.principal===rec.principal)
+     :String(h.name||'').toLowerCase()===name.toLowerCase()&&(h.principal===rec.principal||h.units===rec.units)));
+   if(dup){skipped.push(name);return}
+   rec.id=newId();db.push(rec);added++}
+  catch(e){errors.push(`row ${n+2}: ${e.message}`)}});
+ saveHoldings(db);
+ return{added,skipped,errors}}
+
+function dhanDate(v){v=String(v).trim();let m;
+ if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+ if((m=/^(\d{2})[-/](\d{2})[-/](\d{4})$/.exec(v)))return`${m[3]}-${m[2]}-${m[1]}`;
+ if(/^\d{5}$/.test(v))return serialDate(v);
+ return null}
+function dhanImport(rows){
+ const hdr=rows[0].map(c=>String(c).trim().toLowerCase());
+ const col=(...names)=>{for(const n of names){const i=hdr.findIndex(h=>h===n||(n.length>4&&h.startsWith(n)));if(i>=0)return i}return null};
+ const ix={sym:col('symbol'),tt:col('trade type'),qty:col('quantity'),prc:col('price'),dt:col('trade date'),exch:col('exchange'),
+  ins:col('instrument'),exp:col('expiry date'),strike:col('strike price'),opt:col('option type')};
+ if([ix.sym,ix.tt,ix.qty,ix.prc].includes(null))return{error:'this does not look like a Dhan tradebook (need symbol, trade type, quantity, price columns)'};
+ const lots=new Map();let ignored=0;
+ for(const r of rows.slice(1)){
+  const g=k=>ix[k]!=null&&ix[k]<r.length?String(r[ix[k]]).trim():'';
+  if(g('exp')||g('strike')||g('opt')||(ix.ins!=null&&!['','eq','equity','e'].includes(g('ins').toLowerCase()))){ignored++;continue}   // F&O
+  const tt=g('tt').toUpperCase();
+  if(tt!=='BUY'&&tt!=='SELL'){ignored++;continue}
+  const qty=Number(g('qty').replace(/,/g,'')),prc=Number(g('prc').replace(/,/g,''));
+  if(!g('qty')||!g('prc')||!Number.isFinite(qty)||!Number.isFinite(prc)||qty<=0||prc<=0){ignored++;continue}
+  const sym=g('sym').toUpperCase().replace(/ /g,''),exch=g('exch').toUpperCase();
+  const tick=sym+(sym.includes('.')?'':exch==='NSE'?'.NS':exch==='BSE'?'.BO':'');
+  if(!lots.has(tick))lots.set(tick,{bq:0,bc:0,sq:0,date:null,name:sym});
+  const L=lots.get(tick);
+  if(tt==='BUY'){L.bq+=qty;L.bc+=qty*prc;const d=dhanDate(g('dt'));if(d&&(L.date==null||d<L.date))L.date=d}
+  else L.sq+=qty}
+ const db=holdings(),skipped=[],errors=[];let added=0;
+ for(const[tick,L]of lots){const units=L.bq-L.sq;
+  if(L.bq<=0||units<=0){skipped.push(`${L.name} (fully sold)`);continue}
+  if(db.some(h=>h.type==='stock'&&String(h.symbol||'').toUpperCase()===tick.toUpperCase()&&Math.abs((h.units||0)-units)<1e-9)){skipped.push(`${tick} (already in portfolio)`);continue}
+  db.push({id:newId(),type:'stock',name:L.name,symbol:tick,units,buy:+(L.bc/L.bq).toFixed(4),date:L.date||iso(new Date())});added++}
+ saveHoldings(db);
+ if(ignored)errors.push(`${ignored} non-equity/invalid rows ignored (F&O, option strikes, blanks)`);
+ return{added,skipped,errors,format:'dhan'}}
+
+/* ---- backup / restore (same file format as the hosted version) ---- */
+function clean(h,seen){
+ if(!h||typeof h!=='object'||!TYPES.has(h.type)||h.name==null||String(h.name).trim()==='')return null;
+ let id=typeof h.id==='string'&&/^[\w-]{1,40}$/.test(h.id)?h.id:newId();
+ while(seen.has(id))id=newId();seen.add(id);
+ const o={id,type:h.type};
+ for(const k of STRF)if(h[k]!=null&&h[k]!=='')o[k]=String(h[k]).slice(0,300);
+ for(const k of NUMF)if(h[k]!=null&&h[k]!==''){const n=Number(h[k]);if(Number.isFinite(n))o[k]=n}
+ return o}
+function restore(body){
+ const list=Array.isArray(body)?body:body&&body.holdings;          // also accepts a plain holdings.json
+ if(!Array.isArray(list))return{error:'this file does not contain a list of investments'};
+ const seen=new Set(),good=list.map(h=>clean(h,seen)).filter(Boolean),hist={};
+ if(list.length&&!good.length)return{error:'none of the entries in this file look like investments'};
+ for(const[k,v]of Object.entries(body&&!Array.isArray(body)&&body.history||{}))if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&Number.isFinite(+v))hist[k]=+v;
+ saveHoldings(good);LS.set('history',hist);
+ return{holdings:good.length,dropped:list.length-good.length}}
+
+const TEMPLATE_CSV=`type,name,symbol,units,buy,currency,fx_buy,tax_class,date,principal,rate,start,maturity,freq,value
+stock,Reliance Industries,RELIANCE.NS,10,2450,INR,1,,2024-03-12,,,,,,
+stock,Apple Inc.,AAPL,5,190,USD,83,,2025-03-12,,,,,,
+mf,Axis Bluechip Fund,120503,500,42.50,,,equity,2025-01-15,,,,,,
+fd,My SBI FD,,,,,,,,200000,7.1,2025-04-01,2028-04-01,4,
+manual,Gold jewelry,,,,,,,,,,,,,180000
+`;
+const SAMPLES=[
+ {id:'sample-reli',type:'stock',name:'Reliance Industries',symbol:'RELIANCE.NS',units:15,buy:2410,date:'2025-02-10'},
+ {id:'sample-hdfc',type:'stock',name:'HDFC Bank',symbol:'HDFCBANK.NS',units:25,buy:1640,date:'2024-06-15'},
+ {id:'sample-aapl',type:'stock',name:'Apple Inc.',symbol:'AAPL',units:5,buy:190,date:'2025-03-05'},
+ {id:'sample-axis',type:'mf',name:'Axis Bluechip Fund',symbol:'120503',units:800,buy:38.5,date:'2024-09-20'},
+ {id:'sample-btc',type:'crypto',name:'Bitcoin',symbol:'bitcoin',units:0.05,buy:5200000,date:'2025-05-12'},
+ {id:'sample-fd1',type:'fd',name:'SBI Fixed Deposit',principal:200000,rate:7.1,start:'2025-04-01',maturity:'2028-04-01',freq:'4'},
+ {id:'sample-gold',type:'manual',name:'Gold jewelry',principal:150000,value:168000,date:'2025-11-20'},
+ {id:'sample-tata',type:'stock',name:'Tata Motors',symbol:'TATAMOTORS.NS',units:20,buy:780,date:'2024-04-10',closed_date:'2026-03-15',closed_value:22000}];
+
+async function saveSettings(body){
+ let proxy=String(body.proxy||'').trim().replace(/\/+$/,'');
+ if(proxy&&!/^https:\/\/[^\s/]+/i.test(proxy))return{ok:false,message:'The proxy address should start with https://'};
+ LS.set('settings',{proxy,cgKey:String(body.cgKey||'').trim()});
+ if(!proxy&&!await builtinProxy())return{ok:true,message:'Saved. Without a proxy, stock and ETF prices stay unavailable.'};
+ const what=proxy?'the proxy':"this site's own price service";
+ try{const p=result(await getJSON(`${YH}/v8/finance/chart/%5ENSEI`)).meta.regularMarketPrice;
+  return{ok:true,message:`Saved, and ${what} works (Nifty 50 is at ${Math.round(p).toLocaleString('en-IN')}).`}}
+ catch(e){return{ok:false,message:`Saved, but ${what} did not answer correctly: `+e.message}}}
+
+/* ---- the "server": same addresses and answers as tracker.py ---- */
+const reply=(data,status=200)=>({ok:status<400,status,json:async()=>data,
+ blob:async()=>new Blob([typeof data==='string'?data:JSON.stringify(data)],{type:typeof data==='string'?'text/csv':'application/json'})});
+return async function api(url,opt={}){
+ const u=new URL(url,'http://app.local'),q=Object.fromEntries(u.searchParams),m=(opt.method||'GET').toUpperCase(),p=u.pathname;
+ try{
+  const body=opt.body?JSON.parse(opt.body):{};
+  if(m==='GET'){
+   if(p==='/api/config')return reply({mode:'static',proxy:cfg().proxy||'',builtin:!!await builtinProxy(),cgKey:cfg().cgKey||'',storage:storageOK});
+   if(p==='/api/holdings')return reply(holdings());
+   if(p==='/api/history')return reply(LS.get('history',{}));
+   if(p==='/api/template')return reply(TEMPLATE_CSV);
+   if(p==='/api/backup')return reply({app:'investment-tracker',version:1,exported:new Date().toISOString(),holdings:holdings(),history:LS.get('history',{})});
+   if(p==='/api/price')return reply(await priceInfo(q.type,q.symbol));
+   if(p==='/api/fx')return reply({rate:await fxRateOn(q.currency||'INR',q.date)});
+   if(p==='/api/series')return reply(await series(q.type,q.symbol,parseInt(q.days||'365')));
+   if(p==='/api/search')return reply(await search(q.type||'',q.q||''))}
+  if(m==='POST'){
+   if(p==='/api/holdings'){body.id=newId();const d=holdings();d.push(body);saveHoldings(d);return reply(body)}
+   if(p==='/api/samples'){const d=holdings(),have=new Set(d.map(h=>h.id)),fresh=SAMPLES.filter(s=>!have.has(s.id));
+    if(fresh.length)saveHoldings(d.concat(fresh.map(s=>({...s}))));return reply({added:fresh.length,total:SAMPLES.length})}
+   if(p==='/api/clear_samples'){saveHoldings(holdings().filter(h=>!String(h.id||'').startsWith('sample')));LS.set('history',{});return reply({ok:true})}
+   if(p==='/api/import')return reply(await doImport(body));
+   if(p==='/api/restore'){const r=restore(body);return reply(r,r.error?400:200)}
+   if(p==='/api/settings')return reply(await saveSettings(body));
+   if(p==='/api/history'){const d=LS.get('history',{});d[iso(new Date())]=+body.value;LS.set('history',d);return reply(d)}}
+  const id=p.startsWith('/api/holdings/')?p.split('/').pop():null;
+  if(m==='PUT'&&id){body.id=id;saveHoldings(holdings().map(h=>h.id===id?body:h));return reply(body)}
+  if(m==='DELETE'&&id){saveHoldings(holdings().filter(h=>h.id!==id));return reply({ok:true})}
+  return reply({},404)}
+ catch(e){return reply({error:String(e&&e.message||e)},502)}}
+})();
+</script>
+<script>
+const $=s=>document.querySelector(s),J={'Content-Type':'application/json'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN'),
+ inr2=n=>'₹'+(+n).toLocaleString('en-IN',{maximumFractionDigits:2}),
+ num=n=>(+(+n).toFixed(4)).toLocaleString('en-IN'),
+ sgn=n=>(n>=0?'+':'-')+inr(Math.abs(n)),
+ fdate=s=>new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+ short=n=>{const a=Math.abs(n);return '₹'+(a>=1e7?+(n/1e7).toFixed(2)+' Cr':a>=1e5?+(n/1e5).toFixed(2)+' L':a>=1e3?+(n/1e3).toFixed(1)+'K':Math.round(n))},
+ today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const YR=31557600000,NAME={stock:'Stock / ETF',mf:'Mutual fund',crypto:'Crypto',fd:'Fixed deposit',manual:'Other'},
+ COL={stock:'#1d4ed8',mf:'#0f766e',crypto:'#b45309',fd:'#7c3aed',manual:'#64748b'},
+ HINT={stock:'e.g. RELIANCE.NS',mf:'AMFI scheme code',crypto:'e.g. bitcoin'},
+ SEARCH={stock:'Search stock or ETF',mf:'Search mutual fund',crypto:'Search coin'},MARKET=t=>!!HINT[t];
+let H=[],P={},PINFO={},TOT=0,TYPEINV={},ftype='stock',editing=null,closing=null,filterType='all',sortBy='name',CFG={mode:'local'};
+const dt=h=>h.type==='fd'?h.start:h.date,hasProxy=()=>!!(CFG.proxy||CFG.builtin);
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+
+function fdValue(h){const n=+h.freq||4,t=Math.max(0,(Math.min(Date.now(),new Date(h.maturity))-new Date(h.start))/YR);return h.principal*Math.pow(1+h.rate/100/n,n*t)}
+function calc(h){let inv,cur=null;
+ if(h.type==='fd'){inv=+h.principal;cur=fdValue(h)}
+ else if(h.type==='manual'){inv=+h.principal||+h.value;cur=+h.value}
+ else{inv=h.units*h.buy*(+h.fx_buy||1);cur=P[h.id]==null?null:h.units*P[h.id]}
+ return h.closed_date?{inv,out:+h.closed_value,closed:true}:{inv,cur}}
+function ann(h,inv,val){const d=dt(h);if(!d)return'';
+ const end=h.closed_date?new Date(h.closed_date):h.type==='fd'?Math.min(Date.now(),new Date(h.maturity)):Date.now(),y=(end-new Date(d))/YR;
+ return y>=1&&inv>0&&val>0?`<small>${((Math.pow(val/inv,1/y)-1)*100).toFixed(1)}% a year</small>`:''}
+function xirr(f){const t0=f[0][0],npv=r=>f.reduce((s,[d,a])=>s+a/Math.pow(1+r,(d-t0)/YR),0);
+ let lo=-0.99,hi=10;if(npv(lo)*npv(hi)>0)return null;
+ for(let i=0;i<100;i++){const m=(lo+hi)/2;npv(lo)*npv(m)<=0?hi=m:lo=m}return(lo+hi)/2}
+const menu=(h,second)=>`<td class="act"><details class="menu"><summary aria-label="Actions for ${esc(h.name)}">⋮</summary><div class="menu-items"><button onclick="location.hash='#/edit/${h.id}'">Edit</button>${second}<button class="del" onclick="del('${h.id}')">Delete</button></div></details></td>`;
+const chartCell=h=>MARKET(h.type)?` onclick="holdingChart('${h.id}')" style="cursor:pointer" title="Show price chart"`:'';
+
+function render(){
+ const open=H.filter(h=>!h.closed_date),closed=H.filter(h=>h.closed_date);
+ let inv=0,cur=0,real=0;const by={},byInvested={},F=[];let C=0;
+ let shown=open.filter(h=>filterType==='all'||(filterType==='fd'&&h.type==='fd')||(filterType==='stock'&&h.type==='stock')||h.type===filterType);
+ shown.sort((a,b)=>sortBy==='value'?calc(b).inv-calc(a).inv:sortBy==='gain'?((calc(b).cur??calc(b).inv)-calc(b).inv)-((calc(a).cur??calc(a).inv)-calc(a).inv):sortBy==='loss'?((calc(a).cur??calc(a).inv)-calc(a).inv)-((calc(b).cur??calc(b).inv)-calc(b).inv):String(a.name).localeCompare(String(b.name)));
+ const orow=shown.map(h=>{const c=calc(h),ok=c.cur!=null,v=ok?c.cur:c.inv,g=v-c.inv;
+  inv+=c.inv;cur+=v;by[h.type]=(by[h.type]||0)+v;byInvested[h.type]=(byInvested[h.type]||0)+c.inv;
+  if(ok&&dt(h)&&c.inv>0){F.push([new Date(dt(h)),-c.inv]);C+=v}
+  const m=MARKET(h.type),tax=taxTag(h),na=m?'':' na';
+  return `<tr><td${chartCell(h)}>${esc(h.name)}<small>${NAME[h.type]}${h.type==='fd'?` · ${esc(h.rate)}% till ${fdate(h.maturity)}`:m?` · ${esc(h.symbol)}`:''}${tax?` · ${tax}`:''}${ok?'':' · price unavailable'}</small></td>
+  <td class="num${na}" data-l="Units">${m?num(h.units):'–'}</td><td class="num${na}" data-l="Buy price">${m?money(h.buy,h.currency||'INR'): '–'}</td><td class="num" data-l="Invested">${inr(c.inv)}</td><td class="num" data-l="Current value">${ok?inr(c.cur):'–'}${m&&ok?`<small>Unit: ${inr2(P[h.id])}</small>`:''}</td>
+  <td class="${g>=0?'up':'down'}" data-l="Gain / loss">${ok?sgn(g)+' ('+(g/c.inv*100).toFixed(1)+'%)'+ann(h,c.inv,c.cur):'–'}</td>
+  ${menu(h,`<button onclick="openClose('${h.id}')">Close</button>`)}</tr>`}).join('');
+ $('#open').innerHTML=open.length?`<table><thead><tr><th>Holding</th><th>Units</th><th>Buy price</th><th>Invested</th><th>Current value / unit</th><th>Gain / loss</th><th></th></tr></thead><tbody>${orow}</tbody></table>`
+  :`<div class="empty">${closed.length?'No open investments.':'No investments yet.'} <a href="#/add">Add one</a></div>`;
+ const crow=closed.map(h=>{const c=calc(h),g=c.out-c.inv,m=MARKET(h.type);real+=g;
+  if(dt(h)&&c.inv>0)F.push([new Date(dt(h)),-c.inv],[new Date(h.closed_date),c.out]);
+  return `<tr><td${chartCell(h)}>${esc(h.name)}<small>${NAME[h.type]}${m?` · ${esc(h.symbol)}`:''}</small></td><td class="${m?'':'na'}" data-l="Units">${m?num(h.units):'–'}</td>
+  <td data-l="Bought">${dt(h)?fdate(dt(h)):'–'}</td><td data-l="Closed">${fdate(h.closed_date)}</td><td data-l="Invested">${inr(c.inv)}</td><td data-l="Received">${inr(c.out)}</td>
+  <td class="${g>=0?'up':'down'}" data-l="Realised gain">${sgn(g)} (${(g/c.inv*100).toFixed(1)}%)${ann(h,c.inv,c.out)}</td>
+  ${menu(h,`<button onclick="reopen('${h.id}')">Reopen</button>`)}</tr>`}).join('');
+ $('#closedWrap').hidden=!closed.length;
+ $('#closed').innerHTML=`<table><thead><tr><th>Holding</th><th>Units</th><th>Bought</th><th>Closed</th><th>Invested</th><th>Received</th><th>Realised gain</th><th></th></tr></thead><tbody>${crow}</tbody></table>`;
+ TOT=cur;let X='';
+ if(F.length){F.push([new Date(),C]);if(Date.now()-Math.min(...F.map(f=>f[0]))>=YR){const r=xirr(F);if(r!=null)X=`XIRR ${(r*100).toFixed(1)}% a year`}}
+ const g=cur-inv;
+ $('#stats').innerHTML=`<div class="stat main"><span>Current value</span><b>${inr(cur)}</b><span>${open.length} open investment${open.length==1?'':'s'}</span></div>
+  <div class="stat"><span>Amount invested</span><b>${inr(inv)}</b><span>in open investments</span></div>
+  <div class="stat"><span>Unrealised gain / loss</span><b class="${g>=0?'up':'down'}">${sgn(g)}</b><span>${inv?(g/inv*100).toFixed(1)+'%':'–'} ${X?'· '+X:''}</span></div>
+  <div class="stat"><span>Realised from closed</span><b class="${real>=0?'up':'down'}">${sgn(real)}</b><span>${closed.length} closed</span></div>`;
+ const alloc=Object.entries(by).filter(([,v])=>v>0),shares=largestRemainder(alloc.map(([,v])=>v),cur);
+ $('#abar').innerHTML=alloc.map(([t],i)=>`<div title="${NAME[t]} ${shares[i]}%" style="width:${shares[i]}%;background:${COL[t]}"></div>`).join('');
+ $('#legend').innerHTML=alloc.map(([t],i)=>`<span><i style="background:${COL[t]}"></i>${NAME[t]} ${shares[i]}%</span>`).join('');
+ TYPEINV=byInvested;
+ $('#clr').hidden=!H.some(h=>String(h.id).startsWith('sample'));
+ const fds=H.filter(h=>h.type==='fd'&&!h.closed_date&&h.maturity).map(h=>{
+   const md=new Date(h.maturity),days=Math.ceil((md-Date.now())/864e5);
+   return{h,md,days};
+  }).filter(x=>x.days>=0&&x.days<=366).sort((a,b)=>a.days-b.days);
+ $('#fdwrap').hidden=!fds.length;
+ $('#fdcalbody').innerHTML=fds.length?`<table><thead><tr><th>Fixed deposit</th><th>Principal</th><th>Rate</th><th>Matures on</th><th>Days left</th><th>Value at maturity</th></tr></thead><tbody>${
+  fds.map(({h,md,days})=>{const f=+h.freq||4,y=Math.max(0,(md-new Date(h.start))/YR);
+   return `<tr><td>${esc(h.name)}</td><td data-l="Principal">${inr(h.principal)}</td><td data-l="Rate">${esc(h.rate)}%</td><td data-l="Matures on">${fdate(md)}</td><td data-l="Days left">${days}</td><td data-l="Value at maturity">${inr(h.principal*Math.pow(1+h.rate/100/f,f*y))}</td></tr>`}).join('')
+  }</tbody></table>`:'';
+ chart();
+}
+function largestRemainder(values,total){if(!total||!values.length)return values.map(()=>0);const raw=values.map(v=>v/total*100),base=raw.map(Math.floor);let left=100-base.reduce((a,b)=>a+b,0);raw.map((v,i)=>({i,r:v-base[i]})).sort((a,b)=>b.r-a.r).slice(0,left).forEach(x=>base[x.i]++);return base}
+function money(n,c){return (c==='USD'?'$':'₹')+(+n).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function taxTag(h){if(!h.date)return '';const days=(Date.now()-new Date(h.date).getTime())/864e5;if(h.type==='stock')return days>365?'LTCG':'STCG';if(h.type==='mf'){const c=String(h.tax_class||'').toLowerCase();if(c==='equity')return days>365?'LTCG':'STCG';if(c==='debt')return days>730?'LTCG':'STCG';}return ''}
+function chart(){
+ const el=$('#chart');if(!el)return;
+ const entries=Object.entries(TYPEINV).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+ const total=entries.reduce((sum,[,v])=>sum+v,0);
+ if(!total){el.innerHTML='<div class="empty" style="grid-column:1/-1">Add investments to see the breakdown by type.</div>';return}
+ let angle=0;const stops=[];
+ for(const [type,value] of entries){const next=angle+value/total*360;stops.push(`${COL[type]} ${angle.toFixed(3)}deg ${next.toFixed(3)}deg`);angle=next;}
+ const rows=entries.map(([type,value])=>`<tr><td><span class="type-dot" style="background:${COL[type]}"></span>${NAME[type]}</td><td>${inr(value)}</td><td>${(value/total*100).toFixed(1)}%</td></tr>`).join('');
+ el.innerHTML=`<div class="pie" role="img" aria-label="Pie chart showing amount invested by investment type: ${entries.map(([t,v])=>`${NAME[t]} ${inr(v)}`).join(', ')}" style="background:conic-gradient(${stops.join(',')})"></div><div class="scroll"><table class="type-breakdown"><thead><tr><th>Investment type</th><th>Amount invested</th><th>Share</th></tr></thead><tbody>${rows}<tr class="type-total"><td>Total invested</td><td>${inr(total)}</td><td>100%</td></tr></tbody></table></div>`;
+}
+
+let HDH=null;
+const RANGES=[[30,'1m'],[183,'6m'],[365,'1y'],[730,'2y']];
+function holdingChart(id){const h=H.find(x=>x.id===id);if(!h)return;
+ if(!MARKET(h.type)){alert('No market price history for '+NAME[h.type]+' investments.');return}
+ HDH=h;$('#hd-name').textContent=h.name;$('#hd-sub').textContent=h.symbol;
+ $('#hd-seg').innerHTML=RANGES.map(([d,l])=>`<button type="button" data-d="${d}">${l}</button>`).join('');
+ $('#hd-seg').onclick=e=>{const b=e.target.closest('button');if(b)hdDraw(+b.dataset.d)};
+ $('#hd').showModal();hdDraw(365)}
+async function hdDraw(days){const el=$('#hchart');
+ document.querySelectorAll('#hd-seg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===days));
+ el.innerHTML='<p class="sub" style="padding:12px 4px">Loading prices…</p>';
+ try{
+  const r=await api(`/api/series?type=${HDH.type}&symbol=${encodeURIComponent(HDH.symbol)}&days=${days}`);
+  if(!r.ok)throw new Error('no data');
+  const s=await r.json(),ks=Object.keys(s).sort();
+  if(ks.length<2){el.innerHTML='<p class="sub" style="padding:12px 4px">Not enough price history for this range.</p>';return}
+  $('#hd-sub').textContent=`${HDH.symbol} · ${ks[0].slice(0,7)} to ${ks[ks.length-1].slice(0,7)} · ${inr2(s[ks[ks.length-1]])} now · dashed line = your buy price`;
+  const buy=HDH.buy?HDH.buy*(+HDH.fx_buy||1):0,vs=ks.map(k=>s[k]),lo=Math.min(...vs),hi=Math.max(...vs);
+  const W=Math.max(280,Math.min(640,(el.clientWidth||600))),Ht=230,L=58,R=14,T=14,B=30;
+  const X=i=>L+i/(ks.length-1)*(W-L-R),Y=v=>T+(1-(v-lo)/((hi-lo)||1))*(Ht-T-B);
+  const path=ks.map((k,i)=>(i?'L':'M')+X(i)+','+Y(s[k])).join('');
+  const by=Math.max(T,Math.min(Ht-B,Y(buy)));
+  const bp=buy?`<line x1="${L}" x2="${W-R}" y1="${by}" y2="${by}" stroke="var(--inv)" stroke-dasharray="5 4"/><text x="${W-R}" y="${Math.max(T+8,by-5)}" text-anchor="end">buy ${inr2(buy)}</text>`:'';
+  const xl=[0,Math.floor((ks.length-1)/2),ks.length-1];
+  el.innerHTML=`<svg width="${W}" height="${Ht}" style="max-width:100%;font-size:11px;fill:var(--mute)">
+  ${[lo,(lo+hi)/2,hi].map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${short(v)}</text>`).join('')}
+  ${xl.map((i,n)=>`<text x="${X(i)}" y="${Ht-8}" text-anchor="${n==0?'start':n==2?'end':'middle'}">${fdate(ks[i])}</text>`).join('')}
+  <line x1="${L}" x2="${L}" y1="${T}" y2="${Ht-B}" stroke="var(--mute)"/><line x1="${L}" x2="${W-R}" y1="${Ht-B}" y2="${Ht-B}" stroke="var(--mute)"/>
+  <path d="${path}" fill="none" stroke="var(--ac)" stroke-width="2"/>${bp}</svg>`;
+ }catch{el.innerHTML=`<p class="sub" style="padding:12px 4px">Could not load prices right now. ${CFG.mode==='static'&&HDH.type==='stock'&&!hasProxy()?'Stock charts need the price proxy — see Settings.':'Try another range in a moment.'}</p>`}}
+
+async function load(){
+ H=await (await api('/api/holdings')).json();render();
+ const mk=H.filter(h=>MARKET(h.type)&&!h.closed_date);
+ await Promise.all(mk.map(async h=>{try{const r=await api(`/api/price?type=${h.type}&symbol=${encodeURIComponent(h.symbol)}`);if(r.ok){PINFO[h.id]=await r.json();P[h.id]=PINFO[h.id].price;if(h.type==='stock'&&!h.currency){h.currency=PINFO[h.id].currency||'INR';}if(h.type==='stock'&&h.currency&&h.currency!=='INR'&&!h.fx_buy){const fx=await api(`/api/fx?currency=${h.currency}&date=${h.date}`);if(fx.ok)h.fx_buy=(await fx.json()).rate;}}}catch{}}));
+ status(mk);
+ render();
+ if(TOT>0&&filterType==='all'&&mk.every(h=>P[h.id]!=null)){try{await api('/api/history',{method:'POST',headers:J,body:JSON.stringify({value:Math.round(TOT),date:today()})})}catch{}}
+}
+function status(mk){const miss=mk.filter(h=>P[h.id]==null).length,stale=mk.filter(h=>PINFO[h.id]&&PINFO[h.id].stale).length;
+ let s='Last updated: '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+ if(miss)s+=` · ${miss} price${miss>1?'s':''} unavailable (shown at the amount invested)`;
+ if(stale)s+=` · ${stale} price${stale>1?'s':''} from the last successful update`;
+ $('#updated').textContent=s;
+ if(CFG.mode==='static'&&!hasProxy()&&mk.some(h=>h.type==='stock')){const b=document.createElement('button');b.className='lnk';b.textContent='Set up stock prices';b.onclick=openSettings;$('#updated').append(' ',b)}}
+const put=h=>api('/api/holdings/'+h.id,{method:'PUT',headers:J,body:JSON.stringify(h)});
+async function del(id){const h=H.find(x=>x.id===id);if(!confirm(`Delete "${h.name}"? This cannot be undone.`))return;await api('/api/holdings/'+id,{method:'DELETE',headers:J});load()}
+async function reopen(id){const h=H.find(x=>x.id===id);delete h.closed_date;delete h.closed_value;await put(h);load()}
+function openClose(id){closing=H.find(x=>x.id===id);$('#cl-name').textContent=closing.name;
+ $('#cl-lab').textContent=MARKET(closing.type)?'Sale price per unit (₹)':'Amount received (₹)';
+ $('#cl-amt').value='';$('#cl-date').value=today();$('#dlg').showModal()}
+$('#cl-no').onclick=()=>$('#dlg').close();
+$('#clf').onsubmit=async e=>{e.preventDefault();const a=+$('#cl-amt').value;closing.closed_date=$('#cl-date').value;
+ closing.closed_value=MARKET(closing.type)?a*closing.units:a;await put(closing);$('#dlg').close();load()};
+
+/* ---- form ---- */
+const f=$('#f');
+$('#seg').innerHTML=Object.entries(NAME).map(([k,v])=>`<button type="button" data-v="${k}">${v}</button>`).join('');
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled){ftype=b.dataset.v;fields()}};
+function fields(){const t=ftype;
+ document.querySelectorAll('[data-t]').forEach(l=>{const on=l.dataset.t.split(' ').includes(t);l.classList.toggle('h',!on);l.querySelectorAll('input,select').forEach(i=>i.disabled=!on)});
+ document.querySelectorAll('#closedBox input').forEach(i=>i.disabled=$('#closedBox').hidden);
+ document.querySelectorAll('#seg button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.v===t);b.disabled=!!editing});
+ f.elements.symbol.placeholder=HINT[t]||'';f.elements.symbol.required=MARKET(t);$('#nameL span').textContent=SEARCH[t]||'Name'}
+async function showForm(id){
+ if(id&&!H.length)H=await (await api('/api/holdings')).json();
+ const h=id?H.find(x=>x.id===id):null;if(id&&!h){location.hash='#/';return}
+ editing=id||null;f.reset();ftype=h?h.type:'stock';
+ if(h)for(const[k,v]of Object.entries(h)){const i=f.elements[k];if(i&&i.tagName!=='BUTTON')i.value=v}
+ $('#ftitle').textContent=h?'Edit investment':'New investment';$('#closedBox').hidden=!(h&&h.closed_date);fields()}
+f.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(f));
+ ['units','buy','principal','rate','value','closed_value'].forEach(k=>{if(d[k]!==undefined&&d[k]!=='')d[k]=+d[k]});
+ const old=editing?H.find(x=>x.id===editing):{};const body={...old,...d,type:ftype};
+ if(ftype==='stock'&&body.currency&&body.currency!=='INR'){const fx=await api(`/api/fx?currency=${body.currency}&date=${body.date}`);if(!fx.ok){alert('Could not get the exchange rate for that date. '+(CFG.mode==='static'&&!hasProxy()?'Foreign stocks need the price proxy — see Settings.':'Please try again.'));return}body.fx_buy=(await fx.json()).rate}else{body.fx_buy=1}
+ const r=await api(editing?'/api/holdings/'+editing:'/api/holdings',{method:editing?'PUT':'POST',headers:J,body:JSON.stringify(body)});
+ if(!r.ok){alert('Could not save this investment. Please try again.');return}
+ location.hash='#/'};
+let tm;const nm=$('#nm'),sug=$('#sug');
+nm.oninput=()=>{clearTimeout(tm);if(!MARKET(ftype)||nm.value.length<2){sug.innerHTML='';return}
+ tm=setTimeout(async()=>{try{const res=await api(`/api/search?type=${ftype}&q=${encodeURIComponent(nm.value)}`);
+  if(!res.ok){sug._r=[];sug.innerHTML='<div>Search is unavailable — type the name and the symbol yourself</div>';return}
+  const r=await res.json();
+  sug._r=r;sug.innerHTML=r.length?r.map((x,i)=>`<div data-i="${i}">${esc(x.name)} <small>${esc(x.note)}</small></div>`).join(''):'<div>No matches</div>'}catch{}},400)};
+sug.onclick=e=>{const d=e.target.closest('[data-i]');if(!d)return;const x=sug._r[d.dataset.i];nm.value=x.name;f.elements.symbol.value=x.symbol;sug.innerHTML=''};
+document.addEventListener('click',e=>{if(!e.target.closest('#nameL'))sug.innerHTML='';document.querySelectorAll('details.menu[open]').forEach(m=>{if(!m.contains(e.target))m.open=false})});
+
+/* ---- page routing + footer tools ---- */
+function route(){const h=location.hash||'#/',add=h.startsWith('#/add'),edit=h.startsWith('#/edit/');
+ $('#dash').hidden=add||edit;$('#add').hidden=!(add||edit);
+ $('#nav-dash').classList.toggle('on',!(add||edit));$('#nav-add').classList.toggle('on',add);
+ window.scrollTo(0,0);if(add)showForm();else if(edit)showForm(h.split('/')[2]);else load()}
+window.addEventListener('hashchange',route);
+$('#zen').onclick=()=>{const on=document.body.classList.toggle('zen');$('#zen').textContent=on?'Show amounts':'Hide amounts'};
+$('#clr').onclick=async()=>{await api('/api/clear_samples',{method:'POST',headers:J,body:'{}'});P={};load()};
+$('#csv').onclick=()=>{const k=['type','name','symbol','units','buy','currency','fx_buy','tax_class','date','principal','rate','start','maturity','freq','value','closed_date','closed_value'];
+ const q=v=>{v=String(v??'');return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ const s=[k.join(',')].concat(H.map(h=>k.map(c=>q(h[c])).join(','))).join('\n');
+ download('investments.csv',new Blob([s],{type:'text/csv'}))};
+$('#imp').onclick=()=>$('#file').click();
+$('#tpl').onclick=async()=>{try{
+ const r=await api('/api/template');
+ if(!r.ok)throw new Error('error '+r.status);
+ download('import_template.csv',await r.blob());
+}catch(e){alert('Could not download the template: '+e.message)}};
+
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+ const b64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(f)});
+ const r=await api('/api/import',{method:'POST',headers:J,body:JSON.stringify({filename:f.name,data:b64})});
+ const res=await r.json();e.target.value='';
+ if(!r.ok||res.error){alert('Import failed: '+(res.error||'unknown error'));return}
+ alert(`Import complete.\nAdded: ${res.added}\nSkipped (duplicates): ${res.skipped.length?res.skipped.join(', '):'none'}${res.errors.length?'\n\nProblems:\n'+res.errors.join('\n'):''}${res.format==='dhan'?'\n(Dhan tradebook - equity trades consolidated)':''}`);
+ location.hash='#/';load()};
+
+/* ---- settings ---- */
+function openSettings(){$('#set-msg').textContent='';if(CFG.mode==='static'){$('#set-proxy').value=CFG.proxy||'';$('#set-cg').value=CFG.cgKey||''}$('#settings').showModal()}
+$('#settingsBtn').onclick=openSettings;$('#settingsClose').onclick=()=>$('#settings').close();
+$('#set-save').onclick=async()=>{const m=$('#set-msg');m.textContent='Testing…';
+ const r=await (await api('/api/settings',{method:'POST',headers:J,body:JSON.stringify({proxy:$('#set-proxy').value,cgKey:$('#set-cg').value})})).json();
+ CFG=await (await api('/api/config')).json();m.textContent=r.message;if(r.ok){P={};PINFO={};if(!$('#dash').hidden)load()}};
+$('#bkp').onclick=async()=>{const r=await api('/api/backup');if(!r.ok){alert('Could not create the backup.');return}
+ download(`investments-backup-${today()}.json`,new Blob([JSON.stringify(await r.json(),null,1)],{type:'application/json'}))};
+$('#rst').onclick=()=>$('#rfile').click();
+$('#rfile').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;
+ let data;try{data=JSON.parse(await file.text())}catch{alert('That file is not a tracker backup (it is not valid JSON).');return}
+ if(!confirm('Restore from this backup? It replaces everything currently in the tracker.'))return;
+ const r=await api('/api/restore',{method:'POST',headers:J,body:JSON.stringify(data)}),res=await r.json();
+ if(!r.ok||res.error){alert('Restore failed: '+(res.error||'unknown error'));return}
+ alert(`Restored ${res.holdings} investment${res.holdings==1?'':'s'}.${res.dropped?`\n${res.dropped} entr${res.dropped==1?'y was':'ies were'} skipped because the type or name was missing.`:''}`);
+ P={};PINFO={};$('#settings').close();location.hash='#/';load()};
+$('#filters').onclick=e=>{const b=e.target.closest('[data-filter]');if(!b)return;filterType=b.dataset.filter;$('#filters').querySelectorAll('[data-filter]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render()};$('#sort').onchange=e=>{sortBy=e.target.value;render()};
+$('#smp').onclick=async()=>{const r=await api('/api/samples',{method:'POST',headers:J,body:'{}'});
+ const res=await r.json();alert(res.added?`Added ${res.added} sample investments. Use "Clear sample data" to remove them.`:'Sample data is already loaded.');P={};load()};
+$('#quit').onclick=async()=>{if(!confirm('Stop the tracker? Your data stays saved.'))return;
+ try{await api('/api/quit',{method:'POST',headers:J,body:'{}'})}catch{}
+ document.body.innerHTML='<main><h1>Tracker stopped</h1><p class="sub">Your data is saved. You can close this tab. Run tracker.py to start it again.</p></main>'};
+$('#logout').onclick=async()=>{try{await api('/logout',{method:'POST',headers:J,body:'{}'})}catch{}location.href='/login'};
+
+(async()=>{try{CFG=await (await api('/api/config')).json()}catch{}
+ const st=CFG.mode==='static';
+ $('#set-prices').hidden=!st;$('#quit').hidden=CFG.mode!=='local';$('#logout').hidden=CFG.mode!=='hosted';
+ $('#set-where').textContent=st?'Your investments are saved in this browser only. They do not sync to other devices, and clearing your browser data erases them — download a backup now and then.'
+  :CFG.mode==='hosted'?'Your investments are saved on your server. A backup file can be restored here or in the browser-only version.'
+  :'Your investments are saved on this computer, next to tracker.py.';
+ if(st&&CFG.builtin){$('#set-proxy-note').textContent='This site has its own price service for stocks and ETFs, so there is nothing to set up. Fill in an address below only if you want to use a different proxy.';$('#set-proxy').placeholder='Leave empty to use this site\u2019s own price service'}
+ if(st&&CFG.storage===false){$('#warn').hidden=false;$('#warn').textContent='This browser is blocking storage (private window, or site data turned off), so anything you add will be lost when you close the tab. Use a normal window, or download a backup before you leave.'}
+ route()})();
+</script></body></html>
